@@ -7,7 +7,8 @@ import {
 } from './complainSlice';
 
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 export const getAllComplains = (id, address) => async (dispatch) => {
     dispatch(getRequest());
 

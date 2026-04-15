@@ -7,7 +7,8 @@ import {
     stuffDone
 } from './studentSlice';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 
 export const getAllStudents = (id) => async (dispatch) => {
     dispatch(getRequest());

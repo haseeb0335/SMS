@@ -9,7 +9,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import DownloadIcon from "@mui/icons-material/Download";
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 
 function StudentAttendance() {
   const [attendanceFeed, setAttendanceFeed] = useState([]);

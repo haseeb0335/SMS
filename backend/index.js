@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 const app = express();
 const Routes = require("./routes/route.js");
 const biometricRoutes = require("./routes/biometricRoutes.js");
-const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 5000;
 const parentRoutes = require("./routes/route.js");
 
 dotenv.config();

@@ -21,7 +21,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 
 const ShowFees = () => {
     const theme = useTheme();

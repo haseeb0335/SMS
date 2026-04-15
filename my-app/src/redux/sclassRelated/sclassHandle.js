@@ -12,7 +12,8 @@ import {
     getSubDetailsRequest
 } from './sclassSlice';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 
 export const getAllSclasses = (id, address) => async (dispatch) => {
     dispatch(getRequest());

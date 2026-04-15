@@ -18,7 +18,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; 
 import "react-toastify/dist/ReactToastify.css";
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 
 const AddFees = () => {
     const theme = useTheme();

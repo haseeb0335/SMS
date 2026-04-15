@@ -94,7 +94,7 @@ const ViewStudent = () => {
 
     const fetchParentInfo = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/ParentByStudent/${studentID}`);
+            const res = await axios.get(`sms-nine-beige.vercel.app/ParentByStudent/${studentID}`);
             if (res.data) {
                 setParentData(res.data);
                 setParentLeaveData(res.data.leaves || []);
@@ -115,7 +115,7 @@ const ViewStudent = () => {
             const parentId = parentData?._id;
             if (!parentId) return alert("Parent reference missing.");
 
-            await axios.put(`http://localhost:5000/ApproveLeave/${parentId}/${leaveId}`);
+            await axios.put(`sms-nine-beige.vercel.app/ApproveLeave/${parentId}/${leaveId}`);
             alert("Leave Approved!");
             fetchParentInfo(); 
         } catch (err) {

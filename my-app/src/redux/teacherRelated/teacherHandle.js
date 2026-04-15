@@ -8,7 +8,8 @@ import {
     doneSuccess
 } from './teacherSlice';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "sms-nine-beige.vercel.app";
 export const getTeachersByClass = (id) => async (dispatch) => {
     dispatch(getRequest());
 
