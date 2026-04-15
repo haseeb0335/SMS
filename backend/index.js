@@ -11,6 +11,39 @@ const parentRoutes = require("./routes/route.js");
 
 dotenv.config();
 
+let isConnected = false;
+async function connectToDatabase() {
+    try {
+        await mongoose.connect(process.env.MONGODB_URL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        isConnected = true;
+        console.log("Connected to MongoDB");
+    } catch (error) {
+        console.error("NOT CONNECTED TO NETWORK", error);
+    }
+}
+
+// add middleware to check database connection before processing requests
+app.use((req, res, next) => {
+    if (!isConnected) {
+        connectToDatabase()
+            .then(() => {
+                next();
+            })
+            .catch((err) => {
+                res.status(500).json({ error: "Database connection failed" });
+            });
+    } else {
+        next();
+    }
+});
+
+
+connectToDatabase();
+
+
 app.use(express.json({ limit: "10mb" }));
 app.use(cors());
 app.use('/Parent', parentRoutes);
@@ -27,6 +60,9 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("NOT CONNECTED TO NETWORK", err));
 
-app.listen(PORT, () => {
-  console.log(`Server started at port no. ${PORT}`);
-});
+// app.listen(PORT, () => {
+  
+//   console.log(`Server started at port no. ${PORT}`);
+// });
+
+module.exports = app; // Export the app for testing or serverless deployment
