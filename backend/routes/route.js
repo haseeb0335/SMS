@@ -10,6 +10,7 @@ const { noticeCreate, noticeList, deleteNotices, deleteNotice, updateNotice } = 
 const {
     studentRegister,
     studentLogIn,
+    getStudentProfileDetailed,
     getStudents,
     getStudentDetail,
     getClassStudentsWithAttendance,
@@ -73,6 +74,7 @@ router.put("/EditSalary/:id", editSalary);
 // Student
 router.delete("/deleteQuiz/:id", deleteQuiz);
 router.get("/Sclass/Students/:id", getClassStudents);
+router.get('/StudentProfile/:id', getStudentProfileDetailed);
 
 router.get("/Sclass/StudentsAttendance/:id", getClassStudentsWithAttendance);
 

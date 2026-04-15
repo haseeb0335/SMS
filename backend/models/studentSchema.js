@@ -35,6 +35,13 @@ const studentSchema = new mongoose.Schema({
         type: String, 
         default: "Student" 
     },
+
+email: { type: String },
+phone: { type: String },
+dob: { type: String },
+gender: { type: String },
+address: { type: String },
+emergencyContact: { type: String },
     // ✅ Fees Array using the sub-schema
     fees: [feeSchema],
 

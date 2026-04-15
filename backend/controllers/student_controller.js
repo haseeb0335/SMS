@@ -420,8 +420,33 @@ const getClassStudentsWithAttendance = async (req, res) => {
     }
 };
 
+// NEW: Dedicated controller for the Profile Page
+const getStudentProfileDetailed = async (req, res) => {
+    try {
+        // We fetch the student and use .lean() to get a plain JS object
+        // We populate class and school to get the names
+        const student = await Student.findById(req.params.id)
+            .populate("school", "schoolName")
+            .populate("sclassName", "sclassName")
+            .lean();
+
+        if (student) {
+            // Remove sensitive data before sending to frontend
+            const { password, ...studentData } = student;
+            res.status(200).json(studentData);
+        } else {
+            res.status(404).json({ message: "No student found" });
+        }
+    } catch (err) {
+        res.status(500).json({ message: "Server Error", error: err.message });
+    }
+};
+
+// Remember to add getStudentProfileDetailed to your module.exports at the bottom!
+
 module.exports = {
     studentRegister,
+    getStudentProfileDetailed,
     studentLogIn,
     getStudents,
     getStudentDetail,
