@@ -11,12 +11,14 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { authLogout } from '../../redux/userRelated/userSlice';
 import PaymentsIcon from "@mui/icons-material/Payments";
+import { useSelector } from "react-redux";
 
 const ParentSideBar = () => {
+    const { currentUser } = useSelector((state) => state.user);
     const location = useLocation();
     const navigate = useNavigate(); // Add this
     const dispatch = useDispatch(); // Add this
-
+    const studentId = currentUser?.studentId;
     const handleLogoutClick = () => {
         // Instead of navigating to a page, we just go straight to the logic
         // Or navigate specifically to the logout page
@@ -64,11 +66,7 @@ const ParentSideBar = () => {
                 <ListItemText primary="Apply Leave" />
             </ListItemButton>
 
-            {/* fees collection */}
-              <ListItemButton component={Link} to="/Student/fees">
-                <ListItemIcon><PaymentsIcon /></ListItemIcon>
-                <ListItemText primary="My Fees" />
-            </ListItemButton>
+            
 
             {/* Parent Profile */}
             <ListItemButton component={Link} to="profile">

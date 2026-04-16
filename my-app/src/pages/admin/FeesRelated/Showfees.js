@@ -22,7 +22,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 // const BASE_URL = "http://localhost:5000";
-const BASE_URL = "sms-nine-beige.vercel.app";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const ShowFees = () => {
     const theme = useTheme();

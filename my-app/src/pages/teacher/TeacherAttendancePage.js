@@ -16,7 +16,9 @@ import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
+
 
 function TeacherAttendancePage() {
     const [classes, setClasses] = useState([]);

@@ -16,7 +16,7 @@ function StudentQuizPage() {
   const fetchQuizzes = async () => {
     try {
       const classId = user.sclassName._id || user.sclassName;
-      const res = await axios.get(`http://localhost:5000/getQuiz/${classId}`);
+      const res = await axios.get(`https://sms-xi-rose.vercel.app/getQuiz/${classId}`);
       
       // DISAPPEAR LOGIC: Hide quizzes already in the student's results
       const takenQuizzes = user.quizResults?.map(r => r.quizTitle) || [];
@@ -27,7 +27,7 @@ function StudentQuizPage() {
 
  const handleSubmit = async () => {
   try {
-    const res = await axios.post("http://localhost:5000/submitQuiz", {
+    const res = await axios.post("https://sms-xi-rose.vercel.app/submitQuiz", {
       studentId: user._id,
       quizId: currentQuiz._id,
       answers: answers

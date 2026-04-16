@@ -41,7 +41,8 @@ const AddTeacherSalary = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentRecordId, setCurrentRecordId] = useState(null);
 
-  const BASE_URL = "http://localhost:5000";
+  // const BASE_URL = "http://localhost:5000";
+  const BASE_URL = "https://sms-xi-rose.vercel.app";
 
   useEffect(() => {
     if (currentUser?._id) {

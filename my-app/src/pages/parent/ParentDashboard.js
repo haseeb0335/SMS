@@ -24,7 +24,7 @@ import ParentAnalytics from "./ParentAnalytics";
 import ParentProfile from "./ParentProfile";
 import ParentViewStudent from "./ParentViewStudent";
 import ParentApplyLeave from "./ParentApplyLeave";
-import StudentFees from "../student/StudentFees"; // Import the StudentFees component
+
 import Logout from "../Logout";
 
 const ParentDashboard = () => {
@@ -106,7 +106,7 @@ const ParentDashboard = () => {
                     {/* Matches /Parent/dashboard/profile */}
                     <Route path="profile" element={<ParentProfile />} />
                     <Route path="studentreport" element={<ParentViewStudent />} />
-                    <Route path="/Student/fees" element={<StudentFees />} />
+                 
                     <Route path="apply-leave" element={<ParentApplyLeave />} />
                     <Route path="logout" element={<Logout />} />
                     

@@ -27,7 +27,7 @@ const AdminHomePage = () => {
     useEffect(() => {
         const fetchFees = async () => {
             try {
-                const res = await fetch("sms-nine-beige.vercel.app/AllFees");
+                const res = await fetch("https://sms-xi-rose.vercel.app/AllFees");
                 const data = await res.json();
                 const total = data.reduce((sum, fee) => sum + Number(fee.amount), 0);
                 setTotalFees(total);

@@ -86,7 +86,7 @@ const ParentViewStudent = () => {
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/Student/${studentId}`);
+                const res = await axios.get(`https://sms-xi-rose.vercel.app/Student/${studentId}`);
                 setStudentData(res.data);
                 setLoading(false);
             } catch (err) {

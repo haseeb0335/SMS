@@ -7,7 +7,7 @@ import {
 } from './noticeSlice';
 
 // const BASE_URL = "http://localhost:5000";
-const BASE_URL = "sms-nine-beige.vercel.app";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 export const getAllNotices = (id, address) => async (dispatch) => {
     dispatch(getRequest());

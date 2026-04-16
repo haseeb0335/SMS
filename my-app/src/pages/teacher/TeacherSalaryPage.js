@@ -16,7 +16,8 @@ const TeacherSalaryPage = () => {
   const [latestSalary, setLatestSalary] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
 
-  const BASE_URL = "http://localhost:5000";
+  // const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
   useEffect(() => {
     const fetchMySalaries = async () => {

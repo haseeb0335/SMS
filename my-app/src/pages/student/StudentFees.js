@@ -17,7 +17,7 @@ const StudentFees = () => {
     useEffect(() => {
         const fetchStudentData = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/Student/${studentId}`);
+                const res = await axios.get(`https://sms-xi-rose.vercel.app/Student/${studentId}`);
                 setFees(res.data.fees || []);
             } catch (err) {
                 console.error("Error fetching fees:", err);

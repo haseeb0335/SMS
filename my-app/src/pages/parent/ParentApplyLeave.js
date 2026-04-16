@@ -30,7 +30,7 @@ const ParentApplyLeave = () => {
     // 1. Fetch History from Parent Collection
     const fetchParentLeaveHistory = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/Parent/${currentUser._id}`);
+            const res = await axios.get(`https://sms-xi-rose.vercel.app/Parent/${currentUser._id}`);
             if (res.data && res.data.leaves) {
                 // Sorting by most recent applied date
                 const sorted = res.data.leaves.sort((a, b) => 
@@ -57,7 +57,7 @@ const ParentApplyLeave = () => {
                 leaveDate, 
                 leaveReason 
             };
-            await axios.post(`http://localhost:5000/ApplyLeave`, payload);
+            await axios.post(`https://sms-xi-rose.vercel.app/ApplyLeave`, payload);
             setStatus({ type: "success", msg: "Leave application submitted!" });
             setLeaveDate("");
             setLeaveReason("");
@@ -72,7 +72,7 @@ const ParentApplyLeave = () => {
     const handleDelete = async (leaveId) => {
         if (window.confirm("Are you sure you want to delete this record?")) {
             try {
-                await axios.delete(`http://localhost:5000/DeleteLeave/${currentUser._id}/${leaveId}`);
+                await axios.delete(`https://sms-xi-rose.vercel.app/DeleteLeave/${currentUser._id}/${leaveId}`);
                 fetchParentLeaveHistory();
             } catch (err) {
                 alert("Could not delete. Server error.");
@@ -92,7 +92,7 @@ const ParentApplyLeave = () => {
     const handleUpdate = async () => {
         setLoader(true);
         try {
-            await axios.put(`http://localhost:5000/UpdateLeave/${currentUser._id}/${selectedLeaveId}`, {
+            await axios.put(`https://sms-xi-rose.vercel.app/UpdateLeave/${currentUser._id}/${selectedLeaveId}`, {
                 leaveDate,
                 leaveReason
             });

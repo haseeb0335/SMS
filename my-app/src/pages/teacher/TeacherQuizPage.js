@@ -13,7 +13,8 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import QuizIcon from '@mui/icons-material/Quiz';
 import SaveIcon from '@mui/icons-material/Save';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 function TeacherQuizPage() {
   const user = JSON.parse(localStorage.getItem("user"));

@@ -15,7 +15,8 @@ import PostAddIcon from '@mui/icons-material/PostAdd';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
-const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 function TeacherSelfAttendance() {
   const [status, setStatus] = useState("");

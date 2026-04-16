@@ -44,7 +44,7 @@ const ClassDetails = () => {
     const [message, setMessage] = useState("");
 
     // const BASE_URL = "http://localhost:5000";
-    const BASE_URL = "sms-nine-beige.vercel.app";
+    const BASE_URL = "https://sms-xi-rose.vercel.app";
 
     const deleteHandler = async (deleteID, address) => {
         try {
