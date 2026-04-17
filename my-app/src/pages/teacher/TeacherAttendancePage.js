@@ -289,7 +289,7 @@ function TeacherAttendancePage() {
                             <Accordion key={className} sx={{ mb: 2, borderRadius: '16px !important', overflow: 'hidden', '&:before': { display: 'none' }, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                     <Stack direction="row" alignItems="center" spacing={2}>
-                                        <Typography fontWeight="800" variant="h6" sx={{ color: '#334155' }}>Class {className}</Typography>
+                                        <Typography fontWeight="800" variant="h6" sx={{ color: '#334155' }}> {className}</Typography>
                                         <Chip label={`${Object.keys(classGroups[className]).length} Months`} size="small" variant="outlined" />
                                     </Stack>
                                 </AccordionSummary>

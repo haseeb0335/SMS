@@ -80,14 +80,14 @@ const ShowStudents = () => {
 
         const groups = {};
         filtered.forEach((student) => {
-            const className = student.sclassName.sclassName;
+           const className = student.sclassName?.sclassName || "Unassigned";
             if (!groups[className]) {
                 groups[className] = [];
             }
             groups[className].push({
                 name: student.name,
                 rollNum: student.rollNum,
-                sclassName: student.sclassName.sclassName,
+                sclassName: student.sclassName?.sclassName,
                 id: student._id,
             });
         });

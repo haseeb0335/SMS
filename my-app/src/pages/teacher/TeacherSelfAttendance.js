@@ -5,10 +5,9 @@ import {
   Table, TableHead, TableRow, TableCell, TableBody,
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
   Container, Grid, Card, Chip, Stack, TableContainer, Tooltip,
-  Accordion, AccordionSummary, AccordionDetails, Divider
+  Accordion, AccordionSummary, AccordionDetails
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PostAddIcon from '@mui/icons-material/PostAdd';
@@ -80,37 +79,6 @@ function TeacherSelfAttendance() {
       fetchTeacherAttendance();
     } catch (err) {
       console.log(err);
-    }
-  };
-
-  const handleBiometricAttendance = async () => {
-    try {
-      if (!window.PublicKeyCredential) {
-        alert("Biometric authentication not supported");
-        return;
-      }
-      const challengeRes = await axios.get(`${BASE_URL}/api/biometric-challenge`);
-      const challenge = Uint8Array.from(atob(challengeRes.data.challenge), c => c.charCodeAt(0));
-      const publicKey = { challenge, timeout: 60000, userVerification: "required" };
-      const credential = await navigator.credentials.get({ publicKey });
-      if (credential) {
-        await axios.post(`${BASE_URL}/api/biometric-verify`, { credential });
-        const location = await getLocation();
-        const now = new Date();
-        const data = {
-          date: now,
-          time: now.toTimeString().split(" ")[0],
-          status: "Present",
-          location: location,
-          biometric: true
-        };
-        await axios.post(`${BASE_URL}/TeacherAttendance/${teacherId}`, data);
-        alert("Biometric attendance recorded");
-        fetchTeacherAttendance();
-      }
-    } catch (error) {
-      console.log(error);
-      alert("Biometric authentication failed");
     }
   };
 
@@ -224,16 +192,6 @@ function TeacherSelfAttendance() {
                 sx={{ borderRadius: 3, height: 56, textTransform: 'none', fontWeight: 700, fontSize: '1rem', boxShadow: 'none' }}
               >
                 Log Entry
-              </Button>
-              <Button 
-                fullWidth 
-                variant="contained" 
-                color="success" 
-                startIcon={<FingerprintIcon />} 
-                onClick={handleBiometricAttendance} 
-                sx={{ borderRadius: 3, height: 56, textTransform: 'none', fontWeight: 700, fontSize: '1rem', boxShadow: 'none' }}
-              >
-                Biometric
               </Button>
               <Button 
                 fullWidth 
@@ -386,3 +344,4 @@ function TeacherSelfAttendance() {
 }
 
 export default TeacherSelfAttendance;
+

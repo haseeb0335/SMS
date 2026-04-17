@@ -40,14 +40,14 @@ const ShowSubjects = () => {
     ]
 
     const subjectRows = subjectsList?.map((subject) => {
-        return {
-            subName: subject.subName,
-            sessions: subject.sessions,
-            sclassName: subject.sclassName.sclassName,
-            sclassID: subject.sclassName._id,
-            id: subject._id,
-        };
-    }) || [];
+    return {
+        subName: subject.subName,
+        sessions: subject.sessions,
+        sclassName: subject.sclassName?.sclassName || "Not Assigned",
+        sclassID: subject.sclassName?._id || "",
+        id: subject._id,
+    };
+}) || [];
 
     const SubjectsButtonHaver = ({ row }) => {
         return (
