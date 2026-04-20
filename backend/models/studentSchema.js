@@ -1,11 +1,17 @@
 const mongoose = require('mongoose');
 
-// ✅ Define Fee Schema separately for better structure
+// ✅ Updated Fee Schema with your new fields
 const feeSchema = new mongoose.Schema({
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
     studentName: { type: String },
-    className: { type: String }
+    className: { type: String },
+    // NEW FIELDS ADDED BELOW:
+    fatherName: { type: String },
+    feeMonth: { type: String },
+    previousDues: { type: Number, default: 0 },
+    totalDues: { type: Number, default: 0 },
+    receivedBy: { type: String }
 });
 
 const studentSchema = new mongoose.Schema({
@@ -42,7 +48,7 @@ dob: { type: String },
 gender: { type: String },
 address: { type: String },
 emergencyContact: { type: String },
-    // ✅ Fees Array using the sub-schema
+    // ✅ Fees Array using the updated sub-schema
     fees: [feeSchema],
 
     quizResults: [

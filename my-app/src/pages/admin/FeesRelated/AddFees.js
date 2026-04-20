@@ -2,18 +2,18 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { 
     IconButton, TextField, Button, Typography, Paper, MenuItem, Table,
     TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Stack,
-    Grid, Card, CardContent, InputAdornment, useTheme, useMediaQuery
+    Grid, InputAdornment, useTheme, useMediaQuery
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
+import PrintIcon from "@mui/icons-material/Print";
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import EventIcon from '@mui/icons-material/Event';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import SchoolIcon from '@mui/icons-material/School';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import HistoryIcon from '@mui/icons-material/History';
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import jsPDF from "jspdf";
@@ -31,22 +31,43 @@ const AddFees = () => {
     const [feesList, setFeesList] = useState([]);
     const [selectedClass, setSelectedClass] = useState("");
     const [selectedStudent, setSelectedStudent] = useState("");
+    
+    // Form States
+    const [fatherName, setFatherName] = useState("");
+    const [feeMonth, setFeeMonth] = useState("");
+    const [previousDues, setPreviousDues] = useState("0");
+    const [totalDues, setTotalDues] = useState("0");
+    const [receivedBy, setReceivedBy] = useState("");
     const [amount, setAmount] = useState("");
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     
-    // FILTERS
     const [filterMonth, setFilterMonth] = useState("All");
     const [filterClass, setFilterClass] = useState("All");
 
     const user = JSON.parse(localStorage.getItem("user"));
     const schoolId = user?._id;
+    const schoolName = user?.schoolName || "School System";
 
-    const fetchAllFees = useCallback(async () => {
-        try {
-            const res = await axios.get(`${BASE_URL}/AllFees`);
-            setFeesList(Array.isArray(res.data) ? res.data : []);
-        } catch (err) { console.error(err); }
-    }, []);
+    // Auto-fill Father Name when student is selected
+    const handleStudentChange = (studentId) => {
+        setSelectedStudent(studentId);
+        const student = students.find(s => s._id === studentId);
+        if (student) {
+            setFatherName(student.fatherName || ""); 
+        }
+    };
+
+   const fetchAllFees = useCallback(async () => {
+    try {
+        const res = await axios.get(`${BASE_URL}/AllFees`);
+
+        console.log("API DATA 👉", res.data); // ✅ ADD THIS
+
+        setFeesList(Array.isArray(res.data) ? res.data : []);
+    } catch (err) { 
+        console.error("Error fetching fees:", err); 
+    }
+}, []);
 
     useEffect(() => {
         const fetchClasses = async () => {
@@ -70,18 +91,44 @@ const AddFees = () => {
         fetchStudents();
     }, [selectedClass]);
 
+    const selectedClassObj = classes.find(c => c._id === selectedClass);
+
     const handleAddFee = async () => {
-        if (!selectedStudent || !amount || !date) return toast.warning("Fill all fields");
+        if (!selectedStudent || !amount || !feeMonth || !receivedBy) {
+            return toast.warning("Please fill all required fields");
+        }
+
+        const studentObj = students.find(s => s._id === selectedStudent);
+
+        const feeData = { 
+            studentId: selectedStudent,
+            studentName: studentObj?.name,
+            fatherName: fatherName,
+            className: selectedClassObj?.sclassName, 
+            feeMonth: feeMonth,
+            previousDues: Number(previousDues) || 0,
+            // totalDues: Number(totalDues) || 0,
+            receivedBy: receivedBy,
+            amount: Number(amount),
+            date: date 
+        };
+
         try {
-            await axios.post(`${BASE_URL}/AddFees`, { 
-                studentId: selectedStudent, 
-                amount: Number(amount),
-                date: date 
-            });
-            toast.success("Fee Added Successfully!");
-            setAmount("");
-            fetchAllFees();
-        } catch (err) { toast.error(err.response?.data?.message || "Error"); }
+            const response = await axios.post(`${BASE_URL}/AddFees`, feeData);
+            if (response.status === 200 || response.status === 201) {
+                toast.success("Fee Added Successfully!");
+                // Clear Form
+                setAmount("");
+                setFeeMonth("");
+                setPreviousDues("0");
+                setTotalDues("0");
+                setReceivedBy("");
+                setSelectedStudent("");
+                fetchAllFees();
+            }
+        } catch (err) { 
+            toast.error(err.response?.data?.message || "Error adding fee"); 
+        }
     };
 
     const handleDeleteFee = async (id) => {
@@ -103,39 +150,52 @@ const AddFees = () => {
         } catch (err) { console.error(err); }
     };
 
-    const downloadMonthlyPDF = (className, monthName, fees) => {
-        const doc = new jsPDF();
-        doc.setFontSize(18); doc.text(`Fee Report: ${className}`, 14, 15);
-        doc.setFontSize(12); doc.text(`Month: ${monthName}`, 14, 22);
-        const tableColumn = ["#", "Student Name", "Amount (PKR)", "Date"];
-        const tableRows = fees.map((f, i) => [i + 1, f.studentName, `Rs. ${f.amount}`, new Date(f.date).toLocaleDateString()]);
-        autoTable(doc, { head: [tableColumn], body: tableRows, startY: 30, theme: 'striped', headStyles: { fillColor: [25, 118, 210] } });
-        doc.save(`Fees_${className}_${monthName.replace(/\s+/g, '_')}.pdf`);
+    const downloadReceipt = (fee) => {
+        const doc = new jsPDF({ unit: "mm", format: [80, 150] });
+        const centerX = 40;
+        doc.setFontSize(12);
+        doc.text(schoolName.toUpperCase(), centerX, 10, { align: "center" });
+        doc.setFontSize(8);
+        doc.text("FEE RECEIPT", centerX, 15, { align: "center" });
+        
+        let y = 25;
+        const line = (label, value) => {
+            doc.setFont("helvetica", "bold");
+            doc.text(`${label}:`, 5, y);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${value || "-"}`, 30, y);
+            y += 6;
+        };
+
+        line("Date", new Date(fee.date).toLocaleDateString());
+        line("Student", fee.studentName);
+        line("Father", fee.fatherName);
+        line("Class", fee.className);
+        line("Month", fee.feeMonth);
+        line("Paid", `Rs. ${fee.amount}`);
+        line("Balance", `Rs. ${fee.totalDues || 0}`);
+        line("Collector", fee.receivedBy);
+
+        doc.save(`Receipt_${fee.studentName}.pdf`);
     };
 
-    // Extract unique Class Names for the filter
-    const availableClasses = useMemo(() => {
-        const classNames = feesList.map(f => f.className || "Unassigned");
-        return ["All", ...new Set(classNames)];
-    }, [feesList]);
+    const downloadMonthlyPDF = (className, monthName, fees) => {
+        const doc = new jsPDF();
+        doc.text(`Fee Report: ${className} (${monthName})`, 14, 15);
+        const tableColumn = ["#", "Student", "Father", "Month", "Paid", "Balance", "Received By"];
+        const tableRows = fees.map((f, i) => [
+            i + 1, f.studentName, f.fatherName || "-", f.feeMonth || "-", `Rs. ${f.amount}`, `Rs. ${f.totalDues || 0}`, f.receivedBy || "-"
+        ]);
+        autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
+        doc.save(`Fees_${className}_${monthName}.pdf`);
+    };
 
-    // Extract unique Month-Year strings for the filter
-    const availableMonths = useMemo(() => {
-        const months = feesList.map(f => new Date(f.date).toLocaleString('default', { month: 'long', year: 'numeric' }));
-        return ["All", ...new Set(months)];
-    }, [feesList]);
-
-    // Apply Double Filtering (Class + Month)
     const filteredGroupedFees = useMemo(() => {
         return feesList.reduce((acc, fee) => {
             const className = fee.className || "Unassigned";
             const monthYear = new Date(fee.date).toLocaleString('default', { month: 'long', year: 'numeric' });
-            
-            // Check Class Filter
             if (filterClass !== "All" && className !== filterClass) return acc;
-            // Check Month Filter
             if (filterMonth !== "All" && monthYear !== filterMonth) return acc;
-
             if (!acc[className]) acc[className] = {};
             if (!acc[className][monthYear]) acc[className][monthYear] = [];
             acc[className][monthYear].push(fee);
@@ -147,121 +207,94 @@ const AddFees = () => {
         <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 4 }}>
                 <AccountBalanceWalletIcon color="primary" sx={{ fontSize: 35 }} />
-                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', letterSpacing: '-0.5px' }}>
-                    Fees Portal
-                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b' }}>Fees Portal</Typography>
             </Stack>
             
-            {/* Payment Entry Form */}
-            <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, mb: 5, borderRadius: 4, border: '1px solid #e2e8f0', background: 'white' }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, color: '#334155' }}>Payment Entry</Typography>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField select label="Class" value={selectedClass} fullWidth onChange={(e) => { setSelectedClass(e.target.value); setSelectedStudent(""); }} InputProps={{ startAdornment: (<InputAdornment position="start"><GroupIcon color="primary" fontSize="small" /></InputAdornment>) }}>
+            <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, mb: 5, borderRadius: 4, border: '1px solid #e2e8f0' }}>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField select label="Class" value={selectedClass} fullWidth onChange={(e) => { setSelectedClass(e.target.value); setSelectedStudent(""); }}>
                             {classes.map(c => <MenuItem key={c._id} value={c._id}>{c.sclassName}</MenuItem>)}
                         </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField select label="Student" value={selectedStudent} fullWidth disabled={!selectedClass} onChange={(e) => setSelectedStudent(e.target.value)} InputProps={{ startAdornment: (<InputAdornment position="start"><PersonIcon color="primary" fontSize="small" /></InputAdornment>) }}>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField select label="Student" value={selectedStudent} fullWidth disabled={!selectedClass} onChange={(e) => handleStudentChange(e.target.value)}>
                             {students.map(s => <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>)}
                         </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField label="Amount" type="number" value={amount} fullWidth onChange={(e) => setAmount(e.target.value)} InputProps={{ startAdornment: (<InputAdornment position="start"><Typography sx={{ fontWeight: 'bold', color: '#10b981', fontSize: '0.9rem' }}>PKR</Typography></InputAdornment>) }} />
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="Father Name" value={fatherName} fullWidth onChange={(e) => setFatherName(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="Fee Month" placeholder="e.g. May 2026" value={feeMonth} fullWidth onChange={(e) => setFeeMonth(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField label="Prev Dues" type="number" value={previousDues} fullWidth onChange={(e) => setPreviousDues(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <TextField label="Date" type="date" value={date} fullWidth InputLabelProps={{ shrink: true }} onChange={(e) => setDate(e.target.value)} InputProps={{ startAdornment: (<InputAdornment position="start"><CalendarTodayIcon color="action" fontSize="small" /></InputAdornment>) }} />
+                        <TextField label="Amount Paid" type="number" value={amount} fullWidth onChange={(e) => setAmount(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <TextField label="Total Balance" type="number" value={totalDues} fullWidth onChange={(e) => setTotalDues(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="Received By" value={receivedBy} fullWidth onChange={(e) => setReceivedBy(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="Date" type="date" value={date} fullWidth InputLabelProps={{ shrink: true }} onChange={(e) => setDate(e.target.value)} />
                     </Grid>
                 </Grid>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                    <Button variant="contained" fullWidth={isMobile} onClick={handleAddFee} sx={{ px: 8, py: 1.5, borderRadius: '10px', textTransform: 'none', fontWeight: 700, background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)' }}>Record Payment</Button>
-                </Box>
+                <Button variant="contained" onClick={handleAddFee} sx={{ mt: 3, px: 5, py: 1.5, fontWeight: 700 }}>Submit Fee</Button>
             </Paper>
 
-            {/* Filter Controls Row */}
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 4 }} alignItems={{ md: 'center' }}>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: '#1e293b', flexGrow: 1 }}>Records History</Typography>
-                
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    {/* Class Filter Dropdown */}
-                    <TextField 
-                        select size="small" label="Filter Class" value={filterClass} 
-                        onChange={(e) => setFilterClass(e.target.value)} sx={{ minWidth: 180, bgcolor: 'white' }}
-                        InputProps={{ startAdornment: (<InputAdornment position="start"><SchoolIcon color="primary" fontSize="small" /></InputAdornment>) }}
-                    >
-                        {availableClasses.map(c => <MenuItem key={c} value={c}>{c === "All" ? "All Classes" : c}</MenuItem>)}
-                    </TextField>
-
-                    {/* Month Filter Dropdown */}
-                    <TextField 
-                        select size="small" label="Filter Month" value={filterMonth} 
-                        onChange={(e) => setFilterMonth(e.target.value)} sx={{ minWidth: 180, bgcolor: 'white' }}
-                        InputProps={{ startAdornment: (<InputAdornment position="start"><FilterListIcon color="primary" fontSize="small" /></InputAdornment>) }}
-                    >
-                        {availableMonths.map(m => <MenuItem key={m} value={m}>{m === "All" ? "All Months" : m}</MenuItem>)}
-                    </TextField>
-                </Stack>
-            </Stack>
-
-            {/* Displaying Filtered Results */}
-            {Object.keys(filteredGroupedFees).length === 0 ? (
-                <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 4, color: '#94a3b8' }}>
-                    <Typography>No records found for the selected filters.</Typography>
-                </Paper>
-            ) : (
-                Object.entries(filteredGroupedFees).map(([className, months]) => (
-                    <Box key={className} sx={{ mb: 6 }}>
-                        <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ width: 4, height: 24, bgcolor: 'primary.main', borderRadius: 1 }} /> {className}
-                        </Typography>
-                        
-                        {Object.entries(months).map(([month, fees]) => (
-                            <Box key={month} sx={{ mb: 4, ml: { md: 2 } }}>
-                                <Paper sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid #e2e8f0' }} elevation={0}>
-                                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} sx={{ p: 2, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', gap: 2 }}>
-                                        <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <EventIcon color="action" fontSize="small" /> {month}
-                                        </Typography>
-                                        <Button variant="outlined" size="small" startIcon={<DownloadIcon />} onClick={() => downloadMonthlyPDF(className, month, fees)} sx={{ bgcolor: 'white', textTransform: 'none', fontWeight: 600 }}>PDF Report</Button>
-                                    </Stack>
-
-                                    <TableContainer>
-                                        <Table>
-                                            <TableHead sx={{ bgcolor: '#ffffff' }}>
-                                                <TableRow>
-                                                    <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
-                                                    <TableCell sx={{ fontWeight: 'bold' }}>Student Name</TableCell>
-                                                    <TableCell sx={{ fontWeight: 'bold' }}>Amount (PKR)</TableCell>
-                                                    <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                                                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {fees.map((f, i) => (
-                                                    <TableRow key={f._id} hover>
-                                                        <TableCell>{i + 1}</TableCell>
-                                                        <TableCell sx={{ fontWeight: 600 }}>{f.studentName}</TableCell>
-                                                        <TableCell sx={{ color: '#10b981', fontWeight: 800 }}>Rs. {f.amount}</TableCell>
-                                                        <TableCell>{new Date(f.date).toLocaleDateString()}</TableCell>
-                                                        <TableCell align="right">
-                                                            <IconButton onClick={() => handleEditFee(f)}><EditIcon color="primary" fontSize="small" /></IconButton>
-                                                            <IconButton onClick={() => handleDeleteFee(f._id)}><DeleteIcon color="error" fontSize="small" /></IconButton>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </Paper>
-                            </Box>
-                        ))}
-                    </Box>
-                ))
-            )}
-            <ToastContainer position="bottom-center" autoClose={3000} theme="colored" />
+            {Object.entries(filteredGroupedFees).map(([className, months]) => (
+                <Box key={className} sx={{ mb: 4 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 800, mb: 2 }}>{className}</Typography>
+                    {Object.entries(months).map(([month, fees]) => (
+                        <Paper key={month} sx={{ mb: 3, p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
+                            <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{month}</Typography>
+                                <Button size="small" startIcon={<DownloadIcon />} onClick={() => downloadMonthlyPDF(className, month, fees)}>Monthly Report</Button>
+                            </Stack>
+                            <TableContainer>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Student</TableCell>
+                                            <TableCell>Father</TableCell>
+                                            <TableCell>Month</TableCell>
+                                            <TableCell>Paid</TableCell>
+                                            <TableCell>Balance</TableCell>
+                                            <TableCell>Received By</TableCell>
+                                            <TableCell align="right">Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {fees.map((f) => (
+                                            <TableRow key={f._id}>
+                                                <TableCell sx={{ fontWeight: 600 }}>{f.studentName}</TableCell>
+                                                <TableCell>{f.fatherName || "-"}</TableCell>
+                                                <TableCell>{f.feeMonth || "-"}</TableCell>
+                                                <TableCell sx={{ color: 'green', fontWeight: 700 }}>Rs. {f.amount}</TableCell>
+                                                <TableCell sx={{ color: 'red' }}>Rs. {f.totalDues || 0}</TableCell>
+                                                <TableCell>{f.receivedBy || "-"}</TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton onClick={() => downloadReceipt(f)} size="small"><PrintIcon color="success" /></IconButton>
+                                                    <IconButton onClick={() => handleEditFee(f)} size="small"><EditIcon color="primary" /></IconButton>
+                                                    <IconButton onClick={() => handleDeleteFee(f._id)} size="small"><DeleteIcon color="error" /></IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Paper>
+                    ))}
+                </Box>
+            ))}
+            <ToastContainer position="bottom-center" theme="colored" />
         </Box>
     );
 };
 
 export default AddFees;
-

@@ -20,6 +20,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'; // New Icon
 
 // const BASE_URL = "http://localhost:5000";
 const BASE_URL = "https://sms-xi-rose.vercel.app";
@@ -47,12 +48,51 @@ const ShowFees = () => {
         fetchFees();
     }, []);
 
+    // POS Receipt Logic (Opens a new window for printing)
+    const downloadPOSReceipt = (className, month, fees) => {
+        const total = fees.reduce((sum, f) => sum + Number(f.amount), 0);
+        const receiptWindow = window.open("", "_blank", "width=400,height=600");
+        
+        const content = `
+            <html>
+                <head>
+                    <style>
+                        body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 10px; }
+                        .center { text-align: center; }
+                        .line { border-bottom: 1px dashed #000; margin: 10px 0; }
+                        table { width: 100%; }
+                        th { text-align: left; }
+                        td { text-align: right; }
+                    </style>
+                </head>
+                <body>
+                    <div class="center">
+                        <h2>SCHOOL RECEIPT</h2>
+                        <p>${new Date().toLocaleString()}</p>
+                    </div>
+                    <div class="line"></div>
+                    <p>Class: ${className}</p>
+                    <p>Month: ${month}</p>
+                    <div class="line"></div>
+                    <table>
+                        ${fees.map(f => `<tr><td>${f.studentName}</td><td>Rs. ${f.amount}</td></tr>`).join('')}
+                    </table>
+                    <div class="line"></div>
+                    <h3 class="center">TOTAL: Rs. ${total}</h3>
+                    <p class="center">THANK YOU!</p>
+                </body>
+            </html>
+        `;
+        receiptWindow.document.write(content);
+        receiptWindow.document.close();
+        receiptWindow.print();
+    };
+
     // PDF Export Logic
     const downloadPDF = (className, month, fees) => {
         const doc = new jsPDF();
         const total = fees.reduce((sum, f) => sum + Number(f.amount), 0);
 
-        // Header
         doc.setFontSize(20);
         doc.setTextColor(25, 118, 210);
         doc.text("Fee Collection Report", 14, 20);
@@ -63,7 +103,6 @@ const ShowFees = () => {
         doc.text(`Month: ${month}`, 14, 37);
         doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, 44);
 
-        // Table
         const tableColumn = ["#", "Student Name", "Date", "Amount (PKR)"];
         const tableRows = fees.map((f, index) => [
             index + 1,
@@ -131,13 +170,11 @@ const ShowFees = () => {
 
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
-            {/* Header */}
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
                 <Typography variant="h4" fontWeight={900}>Finance Hub</Typography>
                 <Button variant="outlined" startIcon={<DownloadIcon />} onClick={exportToExcel}>Export Excel</Button>
             </Stack>
 
-            {/* Total Card */}
             <Paper sx={{ p: 3, mb: 4, borderRadius: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <AccountBalanceWalletIcon color="primary" fontSize="large" />
                 <Box>
@@ -146,7 +183,6 @@ const ShowFees = () => {
                 </Box>
             </Paper>
 
-            {/* Render Groups */}
             {Object.entries(groupedData).map(([className, months], cIdx) => (
                 <Accordion key={cIdx} sx={{ mb: 2, borderRadius: '12px !important', overflow: 'hidden' }}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -168,20 +204,21 @@ const ShowFees = () => {
                                         </Stack>
                                     </AccordionSummary>
                                     <AccordionDetails>
-                                        {/* PDF Button */}
-                                        <Box display="flex" justifyContent="flex-end" mb={2}>
+                                        {/* Download Buttons Section */}
+                                        <Stack direction="row" spacing={2} justifyContent="flex-end" mb={2}>
                                             <Button 
-                                                size="small" 
-                                                variant="contained" 
-                                                color="error" 
+                                                size="small" variant="contained" color="error"
                                                 startIcon={<PictureAsPdfIcon />}
                                                 onClick={() => downloadPDF(className, month, fees)}
-                                                sx={{ textTransform: 'none' }}
-                                            >
-                                                Download PDF
-                                            </Button>
-                                        </Box>
+                                            >PDF</Button>
+                                            <Button 
+                                                size="small" variant="contained" color="secondary"
+                                                startIcon={<ReceiptLongIcon />}
+                                                onClick={() => downloadPOSReceipt(className, month, fees)}
+                                            >POS Receipt</Button>
+                                        </Stack>
 
+                                        {/* Table/Cards Rendering ... (Remaining code kept same) */}
                                         {isMobile ? (
                                             fees.map(f => (
                                                 <Card key={f._id} sx={{ mb: 1 }}>
@@ -198,14 +235,7 @@ const ShowFees = () => {
                                         ) : (
                                             <TableContainer component={Paper} elevation={0}>
                                                 <Table size="small">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell>Student</TableCell>
-                                                            <TableCell>Amount</TableCell>
-                                                            <TableCell>Date</TableCell>
-                                                            <TableCell align="right">Actions</TableCell>
-                                                        </TableRow>
-                                                    </TableHead>
+                                                    <TableHead><TableRow><TableCell>Student</TableCell><TableCell>Amount</TableCell><TableCell>Date</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
                                                     <TableBody>
                                                         {fees.map(f => (
                                                             <TableRow key={f._id}>

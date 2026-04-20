@@ -4,7 +4,18 @@ const mongoose = require("mongoose");
 // ✅ ADD FEE
 const addFees = async (req, res) => {
     try {
-        const { studentId, amount, date } = req.body; // Receive date from frontend
+        // Destructure all new fields from the request body
+        const { 
+            studentId, 
+            amount, 
+            date, 
+            fatherName, 
+            feeMonth, 
+            previousDues, 
+            totalDues, 
+            receivedBy 
+        } = req.body; 
+        
         const student = await Student.findById(studentId).populate("sclassName");
 
         if (!student) return res.status(404).json({ message: "Student not found" });
@@ -21,45 +32,74 @@ const addFees = async (req, res) => {
 
         if (alreadyPaid) return res.status(400).json({ message: "Fee already paid for this selected month" });
 
-        const newFee = {
-            _id: new mongoose.Types.ObjectId(),
-            amount: Number(amount),
-            date: selectedDate, // Store the custom date
-            studentName: student.name,
-            className: student.sclassName?.sclassName || "No Class"
-        };
+     // ✅ Calculate balance properly
+const safePrevious = Number(previousDues) || 0;
+const safeAmount = Number(amount) || 0;
+const calculatedBalance = safePrevious - safeAmount;
+
+const newFee = {
+    _id: new mongoose.Types.ObjectId(),
+    amount: safeAmount,
+    date: selectedDate,
+    studentName: student.name,
+    className: student.sclassName?.sclassName || "No Class",
+
+    fatherName: fatherName || "-",
+    feeMonth: feeMonth || "-",
+    previousDues: safePrevious,
+
+    // ✅ Always correct now
+    totalDues: calculatedBalance,
+
+    receivedBy: receivedBy || "-"
+};
 
         student.fees.push(newFee);
         await student.save();
         res.status(200).json({ message: "Fee added", fee: newFee });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+// Replace your existing getAllFees with this version
 const getAllFees = async (req, res) => {
     try {
-        // Populate the class reference
         const students = await Student.find().populate("sclassName");
-
-        if (!students || students.length === 0) {
-            return res.status(200).json([]); // Return empty list instead of crashing
-        }
 
         let allFees = [];
 
         students.forEach(student => {
-            // Safe check: ensure student has fees and fees is an array
             if (student.fees && Array.isArray(student.fees)) {
                 student.fees.forEach(fee => {
+
+                    // ✅ FIX: ensure all fields always exist
+                    const safeFather = fee.fatherName || student.fatherName || "-";
+                    const safeMonth = fee.feeMonth || "-";
+                    const safeReceivedBy = fee.receivedBy || "-";
+
+                    // ✅ FIX: calculate balance if missing
+                    const safePrevious = fee.previousDues || 0;
+                    const safeAmount = fee.amount || 0;
+                    const safeTotalDues = 
+                        typeof fee.totalDues === "number"
+                        ? fee.totalDues
+                        : (safePrevious - safeAmount);
+
                     allFees.push({
                         _id: fee._id,
                         studentId: student._id,
-                        amount: fee.amount,
+                        amount: safeAmount,
                         date: fee.date,
                         studentName: student.name || "Unknown",
-                        // ✅ FIX: Use optional chaining (?.) and a fallback string
-                        // This prevents the "Cannot read property 'sclassName' of null" crash
-                        className: student.sclassName?.sclassName || "Class Not Assigned"
+                        className: student.sclassName?.sclassName || "Class Not Assigned",
+
+                        // ✅ Always filled now
+                        fatherName: safeFather,
+                        feeMonth: safeMonth,
+                        previousDues: safePrevious,
+                        totalDues: safeTotalDues,
+                        receivedBy: safeReceivedBy
                     });
                 });
             }
@@ -68,16 +108,15 @@ const getAllFees = async (req, res) => {
         res.status(200).json(allFees);
 
     } catch (error) {
-        // Check your BACKEND terminal for this specific log
         console.error("Error in getAllFees:", error.message);
-        res.status(500).json({ message: "Internal Server Error", error: error.message });
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
 // DELETE FEE
 const deleteFee = async (req, res) => {
     try {
         const feeId = req.params.id;
-
         const student = await Student.findOne({ "fees._id": feeId });
 
         if (!student) {
@@ -89,7 +128,6 @@ const deleteFee = async (req, res) => {
         );
 
         await student.save();
-
         res.status(200).json({ message: "Fee deleted" });
 
     } catch (error) {
@@ -112,7 +150,6 @@ const editFee = async (req, res) => {
             return res.status(404).json({ message: "Fee not found" });
         }
 
-        // ✅ FIND & UPDATE specific fee
         const fee = student.fees.id(feeId);
 
         if (!fee) {
@@ -120,9 +157,7 @@ const editFee = async (req, res) => {
         }
 
         fee.amount = amount;
-
         await student.save();
-
         res.status(200).json({ message: "Fee updated" });
 
     } catch (error) {
@@ -130,6 +165,7 @@ const editFee = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
 // ✅ GET FEES
 const getStudentFees = async (req, res) => {
     try {
@@ -140,7 +176,7 @@ const getStudentFees = async (req, res) => {
         }
 
         res.status(200).json({
-            fees: student.fees || []   // ✅ SAFE
+            fees: student.fees || []
         });
 
     } catch (error) {
@@ -148,7 +184,11 @@ const getStudentFees = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
 module.exports = {
     addFees,
-    getStudentFees, getAllFees, deleteFee ,editFee,// ✅ EXPORT THIS
+    getStudentFees, 
+    getAllFees, 
+    deleteFee,
+    editFee,
 };
