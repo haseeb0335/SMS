@@ -2,18 +2,13 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { 
     IconButton, TextField, Button, Typography, Paper, MenuItem, Table,
     TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Stack,
-    Grid, InputAdornment, useTheme, useMediaQuery
+    Grid, useTheme, useMediaQuery
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import PrintIcon from "@mui/icons-material/Print";
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import PersonIcon from '@mui/icons-material/Person';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import SchoolIcon from '@mui/icons-material/School';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import HistoryIcon from '@mui/icons-material/History';
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import jsPDF from "jspdf";
@@ -48,7 +43,13 @@ const AddFees = () => {
     const schoolId = user?._id;
     const schoolName = user?.schoolName || "School System";
 
-    // Auto-fill Father Name when student is selected
+    // Auto-calculate Total Balance in form
+    useEffect(() => {
+        const prev = Number(previousDues) || 0;
+        const paid = Number(amount) || 0;
+        setTotalDues((prev - paid).toString());
+    }, [previousDues, amount]);
+
     const handleStudentChange = (studentId) => {
         setSelectedStudent(studentId);
         const student = students.find(s => s._id === studentId);
@@ -57,17 +58,14 @@ const AddFees = () => {
         }
     };
 
-   const fetchAllFees = useCallback(async () => {
-    try {
-        const res = await axios.get(`${BASE_URL}/AllFees`);
-
-        console.log("API DATA 👉", res.data); // ✅ ADD THIS
-
-        setFeesList(Array.isArray(res.data) ? res.data : []);
-    } catch (err) { 
-        console.error("Error fetching fees:", err); 
-    }
-}, []);
+    const fetchAllFees = useCallback(async () => {
+        try {
+            const res = await axios.get(`${BASE_URL}/AllFees`);
+            setFeesList(Array.isArray(res.data) ? res.data : []);
+        } catch (err) { 
+            console.error("Error fetching fees:", err); 
+        }
+    }, []);
 
     useEffect(() => {
         const fetchClasses = async () => {
@@ -107,7 +105,7 @@ const AddFees = () => {
             className: selectedClassObj?.sclassName, 
             feeMonth: feeMonth,
             previousDues: Number(previousDues) || 0,
-            // totalDues: Number(totalDues) || 0,
+            totalDues: Number(totalDues), // Sending calculated balance
             receivedBy: receivedBy,
             amount: Number(amount),
             date: date 
@@ -117,7 +115,6 @@ const AddFees = () => {
             const response = await axios.post(`${BASE_URL}/AddFees`, feeData);
             if (response.status === 200 || response.status === 201) {
                 toast.success("Fee Added Successfully!");
-                // Clear Form
                 setAmount("");
                 setFeeMonth("");
                 setPreviousDues("0");
@@ -142,9 +139,16 @@ const AddFees = () => {
 
     const handleEditFee = async (fee) => {
         const newAmt = prompt("New Amount:", fee.amount);
-        if (!newAmt) return;
+        if (newAmt === null || newAmt === "") return;
+        
+        const updatedAmount = Number(newAmt);
+        const updatedTotalDues = (Number(fee.previousDues) || 0) - updatedAmount;
+
         try {
-            await axios.put(`${BASE_URL}/EditFee/${fee._id}`, { amount: Number(newAmt) });
+            await axios.put(`${BASE_URL}/EditFee/${fee._id}`, { 
+                amount: updatedAmount,
+                totalDues: updatedTotalDues // Updates balance in records
+            });
             fetchAllFees();
             toast.success("Updated");
         } catch (err) { console.error(err); }
@@ -153,28 +157,56 @@ const AddFees = () => {
     const downloadReceipt = (fee) => {
         const doc = new jsPDF({ unit: "mm", format: [80, 150] });
         const centerX = 40;
-        doc.setFontSize(12);
-        doc.text(schoolName.toUpperCase(), centerX, 10, { align: "center" });
-        doc.setFontSize(8);
-        doc.text("FEE RECEIPT", centerX, 15, { align: "center" });
         
-        let y = 25;
-        const line = (label, value) => {
-            doc.setFont("helvetica", "bold");
-            doc.text(`${label}:`, 5, y);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${value || "-"}`, 30, y);
-            y += 6;
-        };
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(schoolName.toUpperCase(), centerX, 12, { align: "center" });
+        
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text("Official Fee Payment Receipt", centerX, 18, { align: "center" });
+        
+        doc.setLineWidth(0.5);
+        doc.line(5, 22, 75, 22);
 
-        line("Date", new Date(fee.date).toLocaleDateString());
-        line("Student", fee.studentName);
-        line("Father", fee.fatherName);
-        line("Class", fee.className);
-        line("Month", fee.feeMonth);
-        line("Paid", `Rs. ${fee.amount}`);
-        line("Balance", `Rs. ${fee.totalDues || 0}`);
-        line("Collector", fee.receivedBy);
+        autoTable(doc, {
+            startY: 25,
+            theme: 'grid',
+            margin: { left: 5, right: 5 },
+            styles: { fontSize: 8, cellPadding: 1.5, lineColor: [0, 0, 0] },
+            columnStyles: { 0: { fontStyle: 'bold', width: 25 }, 1: { width: 45 } },
+            body: [
+                ["Receipt No:", fee._id.substring(fee._id.length - 6).toUpperCase()],
+                ["Date:", new Date(fee.date).toLocaleDateString()],
+                ["Student:", fee.studentName],
+                ["Father Name:", fee.fatherName || "-"],
+                ["Class:", fee.className],
+                ["Fee Month:", fee.feeMonth],
+                ["Paid Amount:", `Rs. ${fee.amount}`],
+                ["Balance:", `Rs. ${fee.totalDues || 0}`],
+                ["Collector:", fee.receivedBy]
+            ],
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 15;
+        const stampX = 10;
+        const stampWidth = 60;
+        const stampHeight = 20;
+
+        doc.setDrawColor(220, 20, 60);
+        doc.setLineWidth(1);
+        doc.rect(stampX, finalY, stampWidth, stampHeight, 'D');
+
+        doc.setTextColor(220, 20, 60);
+        doc.setFontSize(26);
+        doc.setFont("helvetica", "bold");
+        doc.text("PAID", centerX, finalY + 13, { align: "center", angle: 5 });
+        
+        doc.setTextColor(100);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "italic");
+        doc.text("Thank you for your payment!", centerX, finalY + 28, { align: "center" });
+        doc.text("This is a computer generated receipt.", centerX, finalY + 31, { align: "center" });
 
         doc.save(`Receipt_${fee.studentName}.pdf`);
     };
@@ -235,7 +267,7 @@ const AddFees = () => {
                         <TextField label="Amount Paid" type="number" value={amount} fullWidth onChange={(e) => setAmount(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <TextField label="Total Balance" type="number" value={totalDues} fullWidth onChange={(e) => setTotalDues(e.target.value)} />
+                        <TextField label="Total Balance" type="number" value={totalDues} fullWidth InputProps={{ readOnly: true }} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
                         <TextField label="Received By" value={receivedBy} fullWidth onChange={(e) => setReceivedBy(e.target.value)} />
