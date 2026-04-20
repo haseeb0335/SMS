@@ -19,8 +19,6 @@ const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const AddFees = () => {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
     const [classes, setClasses] = useState([]);
     const [students, setStudents] = useState([]);
     const [feesList, setFeesList] = useState([]);
@@ -43,11 +41,20 @@ const AddFees = () => {
     const schoolId = user?._id;
     const schoolName = user?.schoolName || "School System";
 
-    // Auto-calculate Total Balance in form
+    // UPDATED: Logic for Auto-calculation and color signaling
     useEffect(() => {
         const prev = Number(previousDues) || 0;
         const paid = Number(amount) || 0;
-        setTotalDues((prev - paid).toString());
+        const balance = prev - paid;
+        
+        // If balance is 0 (paid == dues), show "0"
+        // If balance > 0 (dues remaining), show "-X"
+        // If balance < 0 (overpaid), show "0"
+        if (balance === 0 || balance < 0) {
+            setTotalDues("0");
+        } else {
+            setTotalDues(`-${balance}`);
+        }
     }, [previousDues, amount]);
 
     const handleStudentChange = (studentId) => {
@@ -97,7 +104,6 @@ const AddFees = () => {
         }
 
         const studentObj = students.find(s => s._id === selectedStudent);
-
         const feeData = { 
             studentId: selectedStudent,
             studentName: studentObj?.name,
@@ -105,7 +111,7 @@ const AddFees = () => {
             className: selectedClassObj?.sclassName, 
             feeMonth: feeMonth,
             previousDues: Number(previousDues) || 0,
-            totalDues: Number(totalDues), // Sending calculated balance
+            totalDues: totalDues,
             receivedBy: receivedBy,
             amount: Number(amount),
             date: date 
@@ -138,16 +144,17 @@ const AddFees = () => {
     };
 
     const handleEditFee = async (fee) => {
-        const newAmt = prompt("New Amount:", fee.amount);
+        const newAmt = prompt("New Amount Paid:", fee.amount);
         if (newAmt === null || newAmt === "") return;
         
         const updatedAmount = Number(newAmt);
-        const updatedTotalDues = (Number(fee.previousDues) || 0) - updatedAmount;
+        const balance = (Number(fee.previousDues) || 0) - updatedAmount;
+        const updatedTotalDues = balance <= 0 ? "0" : `-${balance}`;
 
         try {
             await axios.put(`${BASE_URL}/EditFee/${fee._id}`, { 
                 amount: updatedAmount,
-                totalDues: updatedTotalDues // Updates balance in records
+                totalDues: updatedTotalDues 
             });
             fetchAllFees();
             toast.success("Updated");
@@ -174,7 +181,7 @@ const AddFees = () => {
             theme: 'grid',
             margin: { left: 5, right: 5 },
             styles: { fontSize: 8, cellPadding: 1.5, lineColor: [0, 0, 0] },
-            columnStyles: { 0: { fontStyle: 'bold', width: 25 }, 1: { width: 45 } },
+            columnStyles: { 0: { fontStyle: 'bold', width: 28 }, 1: { width: 42 } },
             body: [
                 ["Receipt No:", fee._id.substring(fee._id.length - 6).toUpperCase()],
                 ["Date:", new Date(fee.date).toLocaleDateString()],
@@ -182,20 +189,17 @@ const AddFees = () => {
                 ["Father Name:", fee.fatherName || "-"],
                 ["Class:", fee.className],
                 ["Fee Month:", fee.feeMonth],
-                ["Paid Amount:", `Rs. ${fee.amount}`],
-                ["Balance:", `Rs. ${fee.totalDues || 0}`],
+                ["Previous Dues:", `Rs. ${fee.previousDues || 0}`],
+                ["Amount Paid:", `Rs. ${fee.amount}`],
+                ["Total Balance:", `Rs. ${fee.totalDues || 0}`],
                 ["Collector:", fee.receivedBy]
             ],
         });
 
         const finalY = doc.lastAutoTable.finalY + 15;
-        const stampX = 10;
-        const stampWidth = 60;
-        const stampHeight = 20;
-
         doc.setDrawColor(220, 20, 60);
         doc.setLineWidth(1);
-        doc.rect(stampX, finalY, stampWidth, stampHeight, 'D');
+        doc.rect(10, finalY, 60, 20, 'D');
 
         doc.setTextColor(220, 20, 60);
         doc.setFontSize(26);
@@ -214,9 +218,9 @@ const AddFees = () => {
     const downloadMonthlyPDF = (className, monthName, fees) => {
         const doc = new jsPDF();
         doc.text(`Fee Report: ${className} (${monthName})`, 14, 15);
-        const tableColumn = ["#", "Student", "Father", "Month", "Paid", "Balance", "Received By"];
+        const tableColumn = ["#", "Student", "Father", "Month", "Prev Dues", "Paid", "Balance", "Collector"];
         const tableRows = fees.map((f, i) => [
-            i + 1, f.studentName, f.fatherName || "-", f.feeMonth || "-", `Rs. ${f.amount}`, `Rs. ${f.totalDues || 0}`, f.receivedBy || "-"
+            i + 1, f.studentName, f.fatherName || "-", f.feeMonth || "-", `Rs. ${f.previousDues || 0}`, `Rs. ${f.amount}`, `Rs. ${f.totalDues || 0}`, f.receivedBy || "-"
         ]);
         autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
         doc.save(`Fees_${className}_${monthName}.pdf`);
@@ -267,7 +271,7 @@ const AddFees = () => {
                         <TextField label="Amount Paid" type="number" value={amount} fullWidth onChange={(e) => setAmount(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <TextField label="Total Balance" type="number" value={totalDues} fullWidth InputProps={{ readOnly: true }} />
+                        <TextField label="Auto Balance" value={totalDues} fullWidth InputProps={{ readOnly: true }} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
                         <TextField label="Received By" value={receivedBy} fullWidth onChange={(e) => setReceivedBy(e.target.value)} />
@@ -293,30 +297,38 @@ const AddFees = () => {
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Student</TableCell>
-                                            <TableCell>Father</TableCell>
                                             <TableCell>Month</TableCell>
+                                            <TableCell>Prev Dues</TableCell>
                                             <TableCell>Paid</TableCell>
                                             <TableCell>Balance</TableCell>
-                                            <TableCell>Received By</TableCell>
+                                            <TableCell>Collector</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {fees.map((f) => (
-                                            <TableRow key={f._id}>
-                                                <TableCell sx={{ fontWeight: 600 }}>{f.studentName}</TableCell>
-                                                <TableCell>{f.fatherName || "-"}</TableCell>
-                                                <TableCell>{f.feeMonth || "-"}</TableCell>
-                                                <TableCell sx={{ color: 'green', fontWeight: 700 }}>Rs. {f.amount}</TableCell>
-                                                <TableCell sx={{ color: 'red' }}>Rs. {f.totalDues || 0}</TableCell>
-                                                <TableCell>{f.receivedBy || "-"}</TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton onClick={() => downloadReceipt(f)} size="small"><PrintIcon color="success" /></IconButton>
-                                                    <IconButton onClick={() => handleEditFee(f)} size="small"><EditIcon color="primary" /></IconButton>
-                                                    <IconButton onClick={() => handleDeleteFee(f._id)} size="small"><DeleteIcon color="error" /></IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {fees.map((f) => {
+                                            const balanceValue = f.totalDues === "0" ? 0 : parseFloat(f.totalDues);
+                                            return (
+                                                <TableRow key={f._id}>
+                                                    <TableCell sx={{ fontWeight: 600 }}>{f.studentName}</TableCell>
+                                                    <TableCell>{f.feeMonth || "-"}</TableCell>
+                                                    <TableCell sx={{ color: 'orange' }}>Rs. {f.previousDues || 0}</TableCell>
+                                                    <TableCell sx={{ color: 'green', fontWeight: 700 }}>Rs. {f.amount}</TableCell>
+                                                    <TableCell sx={{ 
+                                                        color: balanceValue === 0 ? 'green' : 'red', 
+                                                        fontWeight: 700 
+                                                    }}>
+                                                        Rs. {f.totalDues || 0}
+                                                    </TableCell>
+                                                    <TableCell>{f.receivedBy || "-"}</TableCell>
+                                                    <TableCell align="right">
+                                                        <IconButton onClick={() => downloadReceipt(f)} size="small"><PrintIcon color="success" /></IconButton>
+                                                        <IconButton onClick={() => handleEditFee(f)} size="small"><EditIcon color="primary" /></IconButton>
+                                                        <IconButton onClick={() => handleDeleteFee(f._id)} size="small"><DeleteIcon color="error" /></IconButton>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
