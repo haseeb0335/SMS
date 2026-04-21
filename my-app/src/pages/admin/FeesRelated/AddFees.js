@@ -32,6 +32,7 @@ const AddFees = () => {
     const [totalDues, setTotalDues] = useState("0");
     const [receivedBy, setReceivedBy] = useState("");
     const [amount, setAmount] = useState("");
+    const [whatsappNumber, setWhatsappNumber] = useState(""); // NEW
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     
     const [filterMonth, setFilterMonth] = useState("All");
@@ -41,21 +42,32 @@ const AddFees = () => {
     const schoolId = user?._id;
     const schoolName = user?.schoolName || "School System";
 
-    // UPDATED: Logic for Auto-calculation and color signaling
     useEffect(() => {
         const prev = Number(previousDues) || 0;
         const paid = Number(amount) || 0;
         const balance = prev - paid;
         
-        // If balance is 0 (paid == dues), show "0"
-        // If balance > 0 (dues remaining), show "-X"
-        // If balance < 0 (overpaid), show "0"
         if (balance === 0 || balance < 0) {
             setTotalDues("0");
         } else {
             setTotalDues(`-${balance}`);
         }
     }, [previousDues, amount]);
+
+    const sendWhatsAppMessage = (feeData) => {
+        if (!whatsappNumber) return;
+        
+        const message = `*FEE NOTIFICATION: ${schoolName}*%0A%0A` +
+            `*Student:* ${feeData.studentName}%0A` +
+            `*Class:* ${feeData.className}%0A` +
+            `*Month:* ${feeData.feeMonth}%0A` +
+            `*Amount Paid:* Rs. ${feeData.amount}%0A` +
+            `*Remaining Balance:* Rs. ${feeData.totalDues}%0A%0A` +
+            `Thank you for your payment.`;
+
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+        window.open(whatsappUrl, "_blank");
+    };
 
     const handleStudentChange = (studentId) => {
         setSelectedStudent(studentId);
@@ -121,12 +133,14 @@ const AddFees = () => {
             const response = await axios.post(`${BASE_URL}/AddFees`, feeData);
             if (response.status === 200 || response.status === 201) {
                 toast.success("Fee Added Successfully!");
+                sendWhatsAppMessage(feeData); // Trigger WhatsApp Message
                 setAmount("");
                 setFeeMonth("");
                 setPreviousDues("0");
                 setTotalDues("0");
                 setReceivedBy("");
                 setSelectedStudent("");
+                setWhatsappNumber("");
                 fetchAllFees();
             }
         } catch (err) { 
@@ -272,6 +286,9 @@ const AddFees = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <TextField label="Auto Balance" value={totalDues} fullWidth InputProps={{ readOnly: true }} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="WhatsApp Number" placeholder="923000000000" value={whatsappNumber} fullWidth onChange={(e) => setWhatsappNumber(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
                         <TextField label="Received By" value={receivedBy} fullWidth onChange={(e) => setReceivedBy(e.target.value)} />
