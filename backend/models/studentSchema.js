@@ -48,7 +48,7 @@ dob: { type: String },
 gender: { type: String },
 address: { type: String },
 emergencyContact: { type: String },
-profilePicture: { type: String },
+profilePic: { type: String },
     // ✅ Fees Array using the updated sub-schema
     fees: [feeSchema],
 
