@@ -94,7 +94,7 @@ const ViewStudent = () => {
 
     const fetchParentInfo = async () => {
         try {
-            const res = await axios.get(`sms-nine-beige.vercel.app/ParentByStudent/${studentID}`);
+            const res = await axios.get(`https://sms-xi-rose.vercel.app/ParentByStudent/${studentID}`);
             if (res.data) {
                 setParentData(res.data);
                 setParentLeaveData(res.data.leaves || []);
@@ -115,7 +115,7 @@ const ViewStudent = () => {
             const parentId = parentData?._id;
             if (!parentId) return alert("Parent reference missing.");
 
-            await axios.put(`sms-nine-beige.vercel.app/ApproveLeave/${parentId}/${leaveId}`);
+            await axios.put(`https://sms-xi-rose.vercel.app/ApproveLeave/${parentId}/${leaveId}`);
             alert("Leave Approved!");
             fetchParentInfo(); 
         } catch (err) {
@@ -151,9 +151,19 @@ const ViewStudent = () => {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={4}>
                     <Card sx={{ borderRadius: 5, textAlign: 'center', p: 4, border: '1px solid #eee' }}>
-                        <Avatar sx={{ width: 100, height: 100, margin: '0 auto', bgcolor: theme.palette.primary.main, mb: 2, fontSize: '2.5rem' }}>
-                            {userDetails?.name?.charAt(0)}
-                        </Avatar>
+                        <Avatar
+    src={userDetails?.profilePic ? `https://sms-xi-rose.vercel.app/${userDetails.profilePic}` : ""}
+    sx={{
+        width: 100,
+        height: 100,
+        margin: '0 auto',
+        bgcolor: theme.palette.primary.main,
+        mb: 2,
+        fontSize: '2.5rem'
+    }}
+>
+    {!userDetails?.profilePic && userDetails?.name?.charAt(0)}
+</Avatar>
                         <Typography variant="h5" fontWeight="800">{userDetails?.name}</Typography>
                         <Chip label="Student Profile" color="primary" variant="outlined" size="small" sx={{ mt: 1, fontWeight: 600 }} />
                     </Card>
