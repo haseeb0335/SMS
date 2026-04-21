@@ -39,6 +39,8 @@ import {
 import CustomBarChart from '../../../components/CustomBarChart';
 import { StyledTableCell, StyledTableRow } from '../../../components/styles';
 
+const BASE_URL = "https://sms-xi-rose.vercel.app";
+
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
@@ -94,7 +96,7 @@ const ViewStudent = () => {
 
     const fetchParentInfo = async () => {
         try {
-            const res = await axios.get(`https://sms-xi-rose.vercel.app/ParentByStudent/${studentID}`);
+            const res = await axios.get(`${BASE_URL}/ParentByStudent/${studentID}`);
             if (res.data) {
                 setParentData(res.data);
                 setParentLeaveData(res.data.leaves || []);
@@ -115,7 +117,7 @@ const ViewStudent = () => {
             const parentId = parentData?._id;
             if (!parentId) return alert("Parent reference missing.");
 
-            await axios.put(`https://sms-xi-rose.vercel.app/ApproveLeave/${parentId}/${leaveId}`);
+            await axios.put(`${BASE_URL}/ApproveLeave/${parentId}/${leaveId}`);
             alert("Leave Approved!");
             fetchParentInfo(); 
         } catch (err) {
@@ -151,8 +153,8 @@ const ViewStudent = () => {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={4}>
                     <Card sx={{ borderRadius: 5, textAlign: 'center', p: 4, border: '1px solid #eee' }}>
-                        <Avatar
-    src={userDetails?.profilePic ? `https://sms-xi-rose.vercel.app/${userDetails.profilePic}` : ""}
+   <Avatar
+    src={userDetails?.profilePic || ""}
     sx={{
         width: 100,
         height: 100,
