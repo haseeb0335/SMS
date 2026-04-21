@@ -15,19 +15,33 @@ const studentRegister = async (req, res) => {
         });
 
         if (existingStudent) {
-            res.send({ message: 'Roll Number already exists' });
+            return res.send({ message: 'Roll Number already exists' });
         }
-        else {
-            const student = new Student({
-                ...req.body,
-                school: req.body.adminID,
-                password: hashedPass
-            });
 
-            let result = await student.save();
-            result.password = undefined;
-            res.send(result);
-        }
+        const student = new Student({
+            name: req.body.name,
+            fatherName: req.body.fatherName,
+            rollNum: req.body.rollNum,
+            password: hashedPass,
+            sclassName: req.body.sclassName,
+            school: req.body.adminID,
+            role: req.body.role,
+
+            email: req.body.email,
+            phone: req.body.phone,
+            dob: req.body.dob,
+            gender: req.body.gender,
+            address: req.body.address,
+            emergencyContact: req.body.emergencyContact,
+
+            // ✅ THIS IS THE KEY FIX
+            profilePic: req.body.profilePic
+        });
+
+        let result = await student.save();
+        result.password = undefined;
+
+        res.send(result);
     } catch (err) {
         res.status(500).json(err);
     }
