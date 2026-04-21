@@ -28,11 +28,10 @@ const AddFees = () => {
     // Form States
     const [fatherName, setFatherName] = useState("");
     const [feeMonth, setFeeMonth] = useState("");
-    const [previousDues, setPreviousDues] = useState("0");
-    const [totalDues, setTotalDues] = useState("0");
+    const [totalDues, setTotalDues] = useState("0"); // This is now the manual input for Total
     const [receivedBy, setReceivedBy] = useState("");
     const [amount, setAmount] = useState("");
-    const [whatsappNumber, setWhatsappNumber] = useState(""); // NEW
+    const [whatsappNumber, setWhatsappNumber] = useState("");
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     
     const [filterMonth, setFilterMonth] = useState("All");
@@ -42,17 +41,11 @@ const AddFees = () => {
     const schoolId = user?._id;
     const schoolName = user?.schoolName || "School System";
 
-    useEffect(() => {
-        const prev = Number(previousDues) || 0;
-        const paid = Number(amount) || 0;
-        const balance = prev - paid;
-        
-        if (balance === 0 || balance < 0) {
-            setTotalDues("0");
-        } else {
-            setTotalDues(`-${balance}`);
-        }
-    }, [previousDues, amount]);
+    // Internal calculation for the display logic in the table and message
+    const calculateBalance = (total, paid) => {
+        const balance = (Number(total) || 0) - (Number(paid) || 0);
+        return balance <= 0 ? "0" : `-${balance}`;
+    };
 
     const sendWhatsAppMessage = (feeData) => {
         if (!whatsappNumber) return;
@@ -61,6 +54,7 @@ const AddFees = () => {
             `*Student:* ${feeData.studentName}%0A` +
             `*Class:* ${feeData.className}%0A` +
             `*Month:* ${feeData.feeMonth}%0A` +
+            `*Total Dues:* Rs. ${feeData.previousDues}%0A` +
             `*Amount Paid:* Rs. ${feeData.amount}%0A` +
             `*Remaining Balance:* Rs. ${feeData.totalDues}%0A%0A` +
             `Thank you for your payment.`;
@@ -116,14 +110,16 @@ const AddFees = () => {
         }
 
         const studentObj = students.find(s => s._id === selectedStudent);
+        const finalBalance = calculateBalance(totalDues, amount);
+
         const feeData = { 
             studentId: selectedStudent,
             studentName: studentObj?.name,
             fatherName: fatherName,
             className: selectedClassObj?.sclassName, 
             feeMonth: feeMonth,
-            previousDues: Number(previousDues) || 0,
-            totalDues: totalDues,
+            previousDues: Number(totalDues) || 0, // Manual Total Dues
+            totalDues: finalBalance, // Calculated remaining balance
             receivedBy: receivedBy,
             amount: Number(amount),
             date: date 
@@ -133,10 +129,9 @@ const AddFees = () => {
             const response = await axios.post(`${BASE_URL}/AddFees`, feeData);
             if (response.status === 200 || response.status === 201) {
                 toast.success("Fee Added Successfully!");
-                sendWhatsAppMessage(feeData); // Trigger WhatsApp Message
+                sendWhatsAppMessage(feeData);
                 setAmount("");
                 setFeeMonth("");
-                setPreviousDues("0");
                 setTotalDues("0");
                 setReceivedBy("");
                 setSelectedStudent("");
@@ -162,8 +157,7 @@ const AddFees = () => {
         if (newAmt === null || newAmt === "") return;
         
         const updatedAmount = Number(newAmt);
-        const balance = (Number(fee.previousDues) || 0) - updatedAmount;
-        const updatedTotalDues = balance <= 0 ? "0" : `-${balance}`;
+        const updatedTotalDues = calculateBalance(fee.previousDues, updatedAmount);
 
         try {
             await axios.put(`${BASE_URL}/EditFee/${fee._id}`, { 
@@ -178,24 +172,17 @@ const AddFees = () => {
     const downloadReceipt = (fee) => {
         const doc = new jsPDF({ unit: "mm", format: [80, 150] });
         const centerX = 40;
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold").setFontSize(14);
         doc.text(schoolName.toUpperCase(), centerX, 12, { align: "center" });
-        
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9).setFont("helvetica", "normal");
         doc.text("Official Fee Payment Receipt", centerX, 18, { align: "center" });
-        
-        doc.setLineWidth(0.5);
-        doc.line(5, 22, 75, 22);
+        doc.setLineWidth(0.5).line(5, 22, 75, 22);
 
         autoTable(doc, {
             startY: 25,
             theme: 'grid',
             margin: { left: 5, right: 5 },
             styles: { fontSize: 8, cellPadding: 1.5, lineColor: [0, 0, 0] },
-            columnStyles: { 0: { fontStyle: 'bold', width: 28 }, 1: { width: 42 } },
             body: [
                 ["Receipt No:", fee._id.substring(fee._id.length - 6).toUpperCase()],
                 ["Date:", new Date(fee.date).toLocaleDateString()],
@@ -203,55 +190,29 @@ const AddFees = () => {
                 ["Father Name:", fee.fatherName || "-"],
                 ["Class:", fee.className],
                 ["Fee Month:", fee.feeMonth],
-                ["Previous Dues:", `Rs. ${fee.previousDues || 0}`],
+                ["Total Dues:", `Rs. ${fee.previousDues || 0}`],
                 ["Amount Paid:", `Rs. ${fee.amount}`],
-                ["Total Balance:", `Rs. ${fee.totalDues || 0}`],
+                ["Remaining:", `Rs. ${fee.totalDues || 0}`],
                 ["Collector:", fee.receivedBy]
             ],
         });
 
         const finalY = doc.lastAutoTable.finalY + 15;
-        doc.setDrawColor(220, 20, 60);
-        doc.setLineWidth(1);
-        doc.rect(10, finalY, 60, 20, 'D');
-
-        doc.setTextColor(220, 20, 60);
-        doc.setFontSize(26);
-        doc.setFont("helvetica", "bold");
-        doc.text("PAID", centerX, finalY + 13, { align: "center", angle: 5 });
-        
-        doc.setTextColor(100);
-        doc.setFontSize(7);
-        doc.setFont("helvetica", "italic");
-        doc.text("Thank you for your payment!", centerX, finalY + 28, { align: "center" });
-        doc.text("This is a computer generated receipt.", centerX, finalY + 31, { align: "center" });
-
+        doc.setDrawColor(220, 20, 60).setLineWidth(1).rect(10, finalY, 60, 20, 'D');
+        doc.setTextColor(220, 20, 60).setFontSize(26).setFont("helvetica", "bold").text("PAID", centerX, finalY + 13, { align: "center", angle: 5 });
         doc.save(`Receipt_${fee.studentName}.pdf`);
-    };
-
-    const downloadMonthlyPDF = (className, monthName, fees) => {
-        const doc = new jsPDF();
-        doc.text(`Fee Report: ${className} (${monthName})`, 14, 15);
-        const tableColumn = ["#", "Student", "Father", "Month", "Prev Dues", "Paid", "Balance", "Collector"];
-        const tableRows = fees.map((f, i) => [
-            i + 1, f.studentName, f.fatherName || "-", f.feeMonth || "-", `Rs. ${f.previousDues || 0}`, `Rs. ${f.amount}`, `Rs. ${f.totalDues || 0}`, f.receivedBy || "-"
-        ]);
-        autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
-        doc.save(`Fees_${className}_${monthName}.pdf`);
     };
 
     const filteredGroupedFees = useMemo(() => {
         return feesList.reduce((acc, fee) => {
             const className = fee.className || "Unassigned";
             const monthYear = new Date(fee.date).toLocaleString('default', { month: 'long', year: 'numeric' });
-            if (filterClass !== "All" && className !== filterClass) return acc;
-            if (filterMonth !== "All" && monthYear !== filterMonth) return acc;
             if (!acc[className]) acc[className] = {};
             if (!acc[className][monthYear]) acc[className][monthYear] = [];
             acc[className][monthYear].push(fee);
             return acc;
         }, {});
-    }, [feesList, filterMonth, filterClass]);
+    }, [feesList]);
 
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
@@ -263,7 +224,7 @@ const AddFees = () => {
             <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, mb: 5, borderRadius: 4, border: '1px solid #e2e8f0' }}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6} md={4}>
-                        <TextField select label="Class" value={selectedClass} fullWidth onChange={(e) => { setSelectedClass(e.target.value); setSelectedStudent(""); }}>
+                        <TextField select label="Class" value={selectedClass} fullWidth onChange={(e) => setSelectedClass(e.target.value)}>
                             {classes.map(c => <MenuItem key={c._id} value={c._id}>{c.sclassName}</MenuItem>)}
                         </TextField>
                     </Grid>
@@ -276,19 +237,16 @@ const AddFees = () => {
                         <TextField label="Father Name" value={fatherName} fullWidth onChange={(e) => setFatherName(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
-                        <TextField label="Fee Month" placeholder="e.g. May 2026" value={feeMonth} fullWidth onChange={(e) => setFeeMonth(e.target.value)} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField label="Prev Dues" type="number" value={previousDues} fullWidth onChange={(e) => setPreviousDues(e.target.value)} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField label="Amount Paid" type="number" value={amount} fullWidth onChange={(e) => setAmount(e.target.value)} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField label="Auto Balance" value={totalDues} fullWidth InputProps={{ readOnly: true }} />
+                        <TextField label="Fee Month" value={feeMonth} fullWidth onChange={(e) => setFeeMonth(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
-                        <TextField label="WhatsApp Number" placeholder="923000000000" value={whatsappNumber} fullWidth onChange={(e) => setWhatsappNumber(e.target.value)} />
+                        <TextField label="Total Dues" type="number" value={totalDues} fullWidth onChange={(e) => setTotalDues(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="Amount Paid" type="number" value={amount} fullWidth onChange={(e) => setAmount(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField label="WhatsApp Number" value={whatsappNumber} fullWidth onChange={(e) => setWhatsappNumber(e.target.value)} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
                         <TextField label="Received By" value={receivedBy} fullWidth onChange={(e) => setReceivedBy(e.target.value)} />
@@ -305,39 +263,28 @@ const AddFees = () => {
                     <Typography variant="h5" sx={{ fontWeight: 800, mb: 2 }}>{className}</Typography>
                     {Object.entries(months).map(([month, fees]) => (
                         <Paper key={month} sx={{ mb: 3, p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }} elevation={0}>
-                            <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{month}</Typography>
-                                <Button size="small" startIcon={<DownloadIcon />} onClick={() => downloadMonthlyPDF(className, month, fees)}>Monthly Report</Button>
-                            </Stack>
                             <TableContainer>
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Student</TableCell>
-                                            <TableCell>Month</TableCell>
-                                            <TableCell>Prev Dues</TableCell>
+                                            <TableCell>Total Dues</TableCell>
                                             <TableCell>Paid</TableCell>
-                                            <TableCell>Balance</TableCell>
-                                            <TableCell>Collector</TableCell>
+                                            <TableCell>Remaining</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {fees.map((f) => {
-                                            const balanceValue = f.totalDues === "0" ? 0 : parseFloat(f.totalDues);
+                                            const isCleared = f.totalDues === "0";
                                             return (
                                                 <TableRow key={f._id}>
                                                     <TableCell sx={{ fontWeight: 600 }}>{f.studentName}</TableCell>
-                                                    <TableCell>{f.feeMonth || "-"}</TableCell>
-                                                    <TableCell sx={{ color: 'orange' }}>Rs. {f.previousDues || 0}</TableCell>
+                                                    <TableCell>Rs. {f.previousDues || 0}</TableCell>
                                                     <TableCell sx={{ color: 'green', fontWeight: 700 }}>Rs. {f.amount}</TableCell>
-                                                    <TableCell sx={{ 
-                                                        color: balanceValue === 0 ? 'green' : 'red', 
-                                                        fontWeight: 700 
-                                                    }}>
+                                                    <TableCell sx={{ color: isCleared ? 'green' : 'red', fontWeight: 700 }}>
                                                         Rs. {f.totalDues || 0}
                                                     </TableCell>
-                                                    <TableCell>{f.receivedBy || "-"}</TableCell>
                                                     <TableCell align="right">
                                                         <IconButton onClick={() => downloadReceipt(f)} size="small"><PrintIcon color="success" /></IconButton>
                                                         <IconButton onClick={() => handleEditFee(f)} size="small"><EditIcon color="primary" /></IconButton>

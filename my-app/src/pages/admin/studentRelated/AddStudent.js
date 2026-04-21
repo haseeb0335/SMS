@@ -5,7 +5,20 @@ import { registerUser } from '../../../redux/userRelated/userHandle';
 import Popup from '../../../components/Popup';
 import { underControl } from '../../../redux/userRelated/userSlice';
 import { getAllSclasses } from '../../../redux/sclassRelated/sclassHandle';
-import { CircularProgress } from '@mui/material';
+import { 
+    CircularProgress, 
+    Box, 
+    Typography, 
+    TextField, 
+    Button, 
+    Paper, 
+    Grid, 
+    Avatar, 
+    MenuItem, 
+    IconButton,
+    Divider
+} from '@mui/material';
+import { CloudUpload, PersonAdd } from '@mui/icons-material';
 
 const AddStudent = ({ situation }) => {
     const dispatch = useDispatch()
@@ -29,6 +42,9 @@ const AddStudent = ({ situation }) => {
     const [address, setAddress] = useState('');
     const [emergencyContact, setEmergencyContact] = useState('');
     const [email, setEmail] = useState('');
+    
+    const [profilePic, setProfilePic] = useState('');
+    const [preview, setPreview] = useState(null);
 
     const adminID = currentUser._id
     const role = "Student"
@@ -48,6 +64,18 @@ const AddStudent = ({ situation }) => {
         dispatch(getAllSclasses(adminID, "Sclass"));
     }, [adminID, dispatch]);
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfilePic(reader.result);
+                setPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const changeHandler = (event) => {
         if (event.target.value === 'Select Class') {
             setClassName('Select Class');
@@ -62,20 +90,8 @@ const AddStudent = ({ situation }) => {
     }
 
     const fields = {
-        name,
-        fatherName,
-        rollNum,
-        password,
-        sclassName,
-        adminID,
-        role,
-        attendance,
-        phone,
-        dob,
-        gender,
-        address,
-        emergencyContact,
-        email
+        name, fatherName, rollNum, password, sclassName, adminID,
+        role, attendance, phone, dob, gender, address, emergencyContact, email, profilePic
     };
 
     const submitHandler = (event) => {
@@ -83,8 +99,7 @@ const AddStudent = ({ situation }) => {
         if (sclassName === "") {
             setMessage("Please select a classname")
             setShowPopup(true)
-        }
-        else {
+        } else {
             setLoader(true)
             dispatch(registerUser(fields, role))
         }
@@ -94,13 +109,11 @@ const AddStudent = ({ situation }) => {
         if (status === 'added') {
             dispatch(underControl())
             navigate(-1)
-        }
-        else if (status === 'failed') {
+        } else if (status === 'failed') {
             setMessage(response)
             setShowPopup(true)
             setLoader(false)
-        }
-        else if (status === 'error') {
+        } else if (status === 'error') {
             setMessage("Network Error")
             setShowPopup(true)
             setLoader(false)
@@ -108,214 +121,107 @@ const AddStudent = ({ situation }) => {
     }, [status, navigate, error, response, dispatch]);
 
     return (
-        <>
-            <div className="register">
-                <form className="registerForm" onSubmit={submitHandler}>
-                    <span className="registerTitle">Add Student</span>
+        <Box sx={{ flexGrow: 1, p: 3, display: 'flex', justifyContent: 'center' }}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 4, maxWidth: 900, width: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+                    <PersonAdd color="primary" fontSize="large" />
+                    <Typography variant="h5" fontWeight="700">
+                        Registration: Add New Student
+                    </Typography>
+                </Box>
+                
+                <Divider sx={{ mb: 4 }} />
 
-                    <div className="formGrid">
+                <form onSubmit={submitHandler}>
+                    <Grid container spacing={3}>
+                        {/* Profile Pic Section */}
+                        <Grid item xs={12} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 2 }}>
+                            <Avatar 
+                                src={preview} 
+                                sx={{ width: 100, height: 100, mb: 2, border: '2px solid #1976d2' }} 
+                            />
+                            <Button
+                                variant="outlined"
+                                component="label"
+                                startIcon={<CloudUpload />}
+                                size="small"
+                            >
+                                Upload Photo
+                                <input hidden accept="image/*" type="file" onChange={handleImageChange} />
+                            </Button>
+                        </Grid>
 
-                        <div className="formGroup">
-                            <label>Student Name</label>
-                            <input className="registerInput"
-                                placeholder="Enter student name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required />
-                        </div>
-
-                        <div className="formGroup">
-                            <label>Father Name</label>
-                            <input className="registerInput"
-                                placeholder="Enter father name"
-                                value={fatherName}
-                                onChange={(e) => setFatherName(e.target.value)}
-                                required />
-                        </div>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Student Name" variant="outlined" value={name} onChange={(e) => setName(e.target.value)} required />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Father's Name" variant="outlined" value={fatherName} onChange={(e) => setFatherName(e.target.value)} required />
+                        </Grid>
 
                         {situation === "Student" && (
-                            <div className="formGroup fullWidth">
-                                <label>Class</label>
-                                <select className="registerInput"
-                                    value={className}
-                                    onChange={changeHandler}
-                                    required>
-                                    <option value='Select Class'>Select Class</option>
+                            <Grid item xs={12}>
+                                <TextField 
+                                    select fullWidth label="Class" value={className} onChange={changeHandler} required
+                                >
+                                    <MenuItem value="Select Class">Select Class</MenuItem>
                                     {sclassesList.map((classItem, index) => (
-                                        <option key={index} value={classItem.sclassName}>
-                                            {classItem.sclassName}
-                                        </option>
+                                        <MenuItem key={index} value={classItem.sclassName}>{classItem.sclassName}</MenuItem>
                                     ))}
-                                </select>
-                            </div>
+                                </TextField>
+                            </Grid>
                         )}
 
-                        <div className="formGroup">
-                            <label>Roll Number</label>
-                            <input className="registerInput" type="number"
-                                placeholder="Enter roll number"
-                                value={rollNum}
-                                onChange={(e) => setRollNum(e.target.value)}
-                                required />
-                        </div>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth type="number" label="Roll Number" variant="outlined" value={rollNum} onChange={(e) => setRollNum(e.target.value)} required />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth type="email" label="Email Address" variant="outlined" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </Grid>
 
-                        <div className="formGroup">
-                            <label>Email</label>
-                            <input className="registerInput" type="email"
-                                placeholder="Enter email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)} />
-                        </div>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Phone" variant="outlined" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Emergency Contact" variant="outlined" value={emergencyContact} onChange={(e) => setEmergencyContact(e.target.value)} />
+                        </Grid>
 
-                        <div className="formGroup">
-                            <label>Phone</label>
-                            <input className="registerInput"
-                                placeholder="Enter phone"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)} />
-                        </div>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth type="date" label="Date of Birth" InputLabelProps={{ shrink: true }} value={dob} onChange={(e) => setDob(e.target.value)} />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField select fullWidth label="Gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+                                <MenuItem value="">Select Gender</MenuItem>
+                                <MenuItem value="Male">Male</MenuItem>
+                                <MenuItem value="Female">Female</MenuItem>
+                                <MenuItem value="Other">Other</MenuItem>
+                            </TextField>
+                        </Grid>
 
-                        <div className="formGroup">
-                            <label>Emergency Contact</label>
-                            <input className="registerInput"
-                                placeholder="Emergency contact"
-                                value={emergencyContact}
-                                onChange={(e) => setEmergencyContact(e.target.value)} />
-                        </div>
+                        <Grid item xs={12}>
+                            <TextField fullWidth multiline rows={2} label="Home Address" variant="outlined" value={address} onChange={(e) => setAddress(e.target.value)} />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField fullWidth type="password" label="Password" variant="outlined" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                        </Grid>
 
-                        <div className="formGroup">
-                            <label>Date of Birth</label>
-                            <input className="registerInput" type="date"
-                                value={dob}
-                                onChange={(e) => setDob(e.target.value)} />
-                        </div>
-
-                        <div className="formGroup">
-                            <label>Gender</label>
-                            <select className="registerInput"
-                                value={gender}
-                                onChange={(e) => setGender(e.target.value)}>
-                                <option value="">Select</option>
-                                <option>Male</option>
-                                <option>Female</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-
-                        <div className="formGroup fullWidth">
-                            <label>Home Address</label>
-                            <textarea className="registerInput"
-                                placeholder="Enter address"
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)} />
-                        </div>
-
-                        <div className="formGroup fullWidth">
-                            <label>Password</label>
-                            <input className="registerInput" type="password"
-                                placeholder="Enter password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required />
-                        </div>
-
-                    </div>
-
-                    <button className="registerButton" type="submit" disabled={loader}>
-                        {loader ? <CircularProgress size={24} color="inherit" /> : 'Add Student'}
-                    </button>
+                        <Grid item xs={12}>
+                            <Button 
+                                type="submit" 
+                                fullWidth 
+                                variant="contained" 
+                                size="large" 
+                                disabled={loader}
+                                sx={{ py: 1.5, mt: 2, borderRadius: 2, fontWeight: 'bold' }}
+                            >
+                                {loader ? <CircularProgress size={24} color="inherit" /> : 'Register Student'}
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </form>
-            </div>
-
+            </Paper>
             <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-
-            {/* ✅ Responsive CSS */}
-            <style>{`
-                .register {
-                    display: flex;
-                    justify-content: center;
-                    padding: 20px;
-                }
-
-                .registerForm {
-                    width: 100%;
-                    max-width: 950px;
-                    background: #fff;
-                    padding: 25px;
-                    border-radius: 12px;
-                    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-                }
-
-                .registerTitle {
-                    font-size: 26px;
-                    font-weight: 700;
-                    margin-bottom: 20px;
-                    text-align: center;
-                }
-
-                .formGrid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 16px;
-                }
-
-                .formGroup {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .fullWidth {
-                    grid-column: span 2;
-                }
-
-                .registerInput {
-                    padding: 11px;
-                    border-radius: 8px;
-                    border: 1px solid #ccc;
-                    margin-top: 5px;
-                    font-size: 14px;
-                    transition: 0.2s;
-                }
-
-                .registerInput:focus {
-                    outline: none;
-                    border-color: #1976d2;
-                    box-shadow: 0 0 0 2px rgba(25,118,210,0.1);
-                }
-
-                .registerButton {
-                    margin-top: 25px;
-                    width: 100%;
-                    padding: 12px;
-                    background: #1976d2;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    cursor: pointer;
-                    font-weight: 600;
-                }
-
-                .registerButton:hover {
-                    background: #125ea8;
-                }
-
-                @media (max-width: 768px) {
-                    .formGrid {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .fullWidth {
-                        grid-column: span 1;
-                    }
-
-                    .registerForm {
-                        padding: 15px;
-                    }
-                }
-            `}</style>
-        </>
-    )
+        </Box>
+    );
 }
 
 export default AddStudent;

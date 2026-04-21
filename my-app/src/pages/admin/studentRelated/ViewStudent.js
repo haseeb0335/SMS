@@ -9,27 +9,27 @@ import { updateStudentFields } from '../../../redux/studentRelated/studentHandle
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { 
-    ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
-    BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend 
+    ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip 
 } from 'recharts';
 
 import { 
     Box, Button, IconButton, Table, TableBody, Typography, 
-    Tab, Paper, BottomNavigation, BottomNavigationAction, Container, Grid, 
+    Paper, BottomNavigation, BottomNavigationAction, Container, Grid, 
     Card, CardContent, CircularProgress, useTheme, Divider, Avatar, Stack,
     Chip, LinearProgress, TableContainer, TableHead, TableRow,
-    TableCell, alpha // Added alpha for modern styling
+    TableCell, alpha 
 } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
+import Tab from '@mui/material/Tab';
 
 import { 
     Delete as DeleteIcon, Insights as InsightsIcon, TableChart as TableChartIcon, 
     AccountCircle, Class as ClassIcon, Fingerprint, School as SchoolIcon,
     Add as AddIcon, Edit as EditIcon, AssignmentTurnedIn as AssignmentTurnedInIcon,
-    Download as DownloadIcon, History as HistoryIcon,
-    Email, Phone, Cake, Transgender, Home, ContactPhone // Added icons for Information Section
+    Download as DownloadIcon,
+    Email, Phone, Cake, Transgender, Home, ContactPhone 
 } from '@mui/icons-material';
 
 import { 
@@ -72,13 +72,11 @@ const ViewStudent = () => {
     const address = "Student";
     const isTeacher = currentUser?.accountType === "Teacher" || window.location.pathname.includes("/Teacher/");
 
-    // --- STATES ---
     const [tabValue, setTabValue] = useState('1');
     const [selectedSection, setSelectedSection] = useState('table');
     const [parentData, setParentData] = useState(null); 
     const [parentLeaveData, setParentLeaveData] = useState([]); 
 
-    // --- FETCH DATA ---
     useEffect(() => {
         dispatch(getUserDetails(studentID, address));
     }, [dispatch, studentID]);
@@ -94,7 +92,7 @@ const ViewStudent = () => {
 
     const fetchParentInfo = async () => {
         try {
-            const res = await axios.get(`sms-nine-beige.vercel.app/ParentByStudent/${studentID}`);
+            const res = await axios.get(`https://sms-nine-beige.vercel.app/ParentByStudent/${studentID}`);
             if (res.data) {
                 setParentData(res.data);
                 setParentLeaveData(res.data.leaves || []);
@@ -106,7 +104,6 @@ const ViewStudent = () => {
         }
     };
 
-    // --- HANDLERS ---
     const handleTabChange = (event, newValue) => setTabValue(newValue);
     const handleSectionChange = (event, newSection) => setSelectedSection(newSection);
 
@@ -114,13 +111,11 @@ const ViewStudent = () => {
         try {
             const parentId = parentData?._id;
             if (!parentId) return alert("Parent reference missing.");
-
-            await axios.put(`sms-nine-beige.vercel.app/ApproveLeave/${parentId}/${leaveId}`);
+            await axios.put(`https://sms-nine-beige.vercel.app/ApproveLeave/${parentId}/${leaveId}`);
             alert("Leave Approved!");
             fetchParentInfo(); 
         } catch (err) {
             console.error("Error approving leave:", err);
-            alert("Could not approve leave. Check backend connection.");
         }
     };
 
@@ -136,7 +131,7 @@ const ViewStudent = () => {
 
     const downloadPDF = async () => {
         const element = reportRef.current;
-        const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: "#ffffff" });
+        const canvas = await html2canvas(element, { scale: 2, useCORS: true });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -145,17 +140,32 @@ const ViewStudent = () => {
         pdf.save(`${userDetails?.name}_Report.pdf`);
     };
 
-    // --- SECTIONS ---
+    // --- INTEGRATED PROFILE PICTURE LOGIC ---
     const DetailsSection = () => (
         <Box>
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={4}>
-                    <Card sx={{ borderRadius: 5, textAlign: 'center', p: 4, border: '1px solid #eee' }}>
-                        <Avatar sx={{ width: 100, height: 100, margin: '0 auto', bgcolor: theme.palette.primary.main, mb: 2, fontSize: '2.5rem' }}>
+                    <Card sx={{ borderRadius: 5, textAlign: 'center', p: 4, border: '1px solid #eee', height: '100%' }}>
+                        <Avatar 
+                            src={userDetails?.profilePicture} // Shows uploaded image
+                            alt={userDetails?.name}
+                            sx={{ 
+                                width: 120, 
+                                height: 120, 
+                                margin: '0 auto', 
+                                bgcolor: theme.palette.primary.main, 
+                                mb: 2, 
+                                fontSize: '3rem',
+                                border: `4px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                                boxShadow: '0px 4px 20px rgba(0,0,0,0.08)'
+                            }} 
+                        >
+                            {/* Fallback to name initial if no image exists */}
                             {userDetails?.name?.charAt(0)}
                         </Avatar>
-                        <Typography variant="h5" fontWeight="800">{userDetails?.name}</Typography>
-                        <Chip label="Student Profile" color="primary" variant="outlined" size="small" sx={{ mt: 1, fontWeight: 600 }} />
+                        <Typography variant="h5" fontWeight="800" sx={{ mb: 0.5 }}>{userDetails?.name}</Typography>
+                        <Typography variant="body2" color="textSecondary" gutterBottom>Roll No: {userDetails?.rollNum}</Typography>
+                        <Chip label="Student Profile" color="primary" variant="filled" size="small" sx={{ mt: 1, fontWeight: 600, px: 1 }} />
                     </Card>
                 </Grid>
                 <Grid item xs={12} md={8}>
@@ -170,7 +180,7 @@ const ViewStudent = () => {
                                 <Box key={index} sx={{ p: 2.5, display: 'flex', alignItems: 'center', borderBottom: index === 3 ? 'none' : '1px solid #f5f5f5' }}>
                                     <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.03)', mr: 3 }}>{item.icon}</Avatar>
                                     <Box>
-                                        <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase' }}>{item.label}</Typography>
+                                        <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>{item.label}</Typography>
                                         <Typography variant="body1" fontWeight="700">{item.value || 'Not Assigned'}</Typography>
                                     </Box>
                                 </Box>
@@ -180,14 +190,12 @@ const ViewStudent = () => {
                 </Grid>
             </Grid>
 
-            {/* Information Section - FIXED & INTEGRATED */}
             <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid #e0e0e0' }}>
                 <CardContent sx={{ p: 4 }}>
-                    <Typography variant="h6" fontWeight="700" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        Personal Information
+                    <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
+                        Contact & Personal Info
                     </Typography>
                     <Divider sx={{ mb: 4 }} />
-                    
                     <Grid container spacing={4}>
                         <InfoBox icon={<Email color="primary" />} label="Email Address" value={userDetails?.email} />
                         <InfoBox icon={<Phone color="primary" />} label="Phone Number" value={userDetails?.phone} />
@@ -202,57 +210,46 @@ const ViewStudent = () => {
     );
 
     const LeaveSection = () => {
-        const displayLeaves = isTeacher 
-            ? parentLeaveData.filter(l => l.status === "Pending") 
-            : parentLeaveData;
-
+        const displayLeaves = isTeacher ? parentLeaveData.filter(l => l.status === "Pending") : parentLeaveData;
         return (
             <Box sx={{ pb: 8 }}>
                 <Typography variant="h5" fontWeight="800" sx={{ mb: 3 }}>Leave Requests</Typography>
-                <Paper sx={{ borderRadius: 4, overflow: 'hidden', border: '1px solid #eee' }}>
-                    <TableContainer>
-                        <Table>
-                            <TableHead sx={{ bgcolor: '#f8f9fa' }}>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Reason</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                                    {isTeacher && <TableCell align="center" sx={{ fontWeight: 'bold' }}>Action</TableCell>}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {displayLeaves.length > 0 ? (
-                                    displayLeaves.map((leave, index) => (
-                                        <StyledTableRow key={index}>
-                                            <StyledTableCell>{new Date(leave.leaveDate).toLocaleDateString()}</StyledTableCell>
-                                            <StyledTableCell>{leave.leaveReason}</StyledTableCell>
-                                            <StyledTableCell>
-                                                <Chip label={leave.status} size="small" color={leave.status === 'Pending' ? 'warning' : 'success'} />
+                <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid #eee' }}>
+                    <Table>
+                        <TableHead sx={{ bgcolor: '#f8f9fa' }}>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Reason</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                                {isTeacher && <TableCell align="center" sx={{ fontWeight: 'bold' }}>Action</TableCell>}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {displayLeaves.length > 0 ? (
+                                displayLeaves.map((leave, index) => (
+                                    <StyledTableRow key={index}>
+                                        <StyledTableCell>{new Date(leave.leaveDate).toLocaleDateString()}</StyledTableCell>
+                                        <StyledTableCell>{leave.leaveReason}</StyledTableCell>
+                                        <StyledTableCell>
+                                            <Chip label={leave.status} size="small" color={leave.status === 'Pending' ? 'warning' : 'success'} />
+                                        </StyledTableCell>
+                                        {isTeacher && (
+                                            <StyledTableCell align="center">
+                                                <Button 
+                                                    variant="contained" color="success" size="small" 
+                                                    startIcon={<AssignmentTurnedInIcon />}
+                                                    onClick={() => handleApprove(leave._id)}
+                                                > Approve </Button>
                                             </StyledTableCell>
-                                            {isTeacher && (
-                                                <StyledTableCell align="center">
-                                                    <Button 
-                                                        variant="contained" 
-                                                        color="success" 
-                                                        size="small"
-                                                        startIcon={<AssignmentTurnedInIcon />}
-                                                        onClick={() => handleApprove(leave._id)}
-                                                    >
-                                                        Approve
-                                                    </Button>
-                                                </StyledTableCell>
-                                            )}
-                                        </StyledTableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>No leave records found.</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Paper>
+                                        )}
+                                    </StyledTableRow>
+                                ))
+                            ) : (
+                                <TableRow><TableCell colSpan={4} align="center" sx={{ py: 3 }}>No records.</TableCell></TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             </Box>
         );
     };
@@ -262,9 +259,9 @@ const ViewStudent = () => {
         const attendanceData = Object.entries(groupAttendanceBySubject(attendance));
         return (
             <Box sx={{ pb: 8 }}>
-                <Typography variant="h5" fontWeight="800" sx={{ mb: 3 }}>Attendance Log</Typography>
+                <Typography variant="h5" fontWeight="800" sx={{ mb: 3 }}>Attendance Overview</Typography>
                 {selectedSection === 'table' ? (
-                    <Paper sx={{ borderRadius: 4, overflow: 'hidden', border: '1px solid #eee' }}>
+                    <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid #eee' }}>
                         <Table>
                             <TableBody>
                                 {attendanceData.map(([name, { present, sessions, subId }], index) => {
@@ -278,20 +275,20 @@ const ViewStudent = () => {
                                                     <Typography variant="body2" fontWeight="700">{percentage}%</Typography>
                                                 </Box>
                                             </StyledTableCell>
-                                            <StyledTableCell align="right">
-                                                {isTeacher && (
+                                            {isTeacher && (
+                                                <StyledTableCell align="right">
                                                     <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                        <Button variant="contained" size="small" onClick={() => navigate(`/Teacher/student/attendance/${studentID}/${subId}`)}>Take</Button>
+                                                        <Button variant="outlined" size="small" onClick={() => navigate(`/Teacher/student/attendance/${studentID}/${subId}`)}>Take</Button>
                                                         <IconButton size="small" onClick={() => removeSubAttendance(subId)}><DeleteIcon color="error" fontSize="small" /></IconButton>
                                                     </Stack>
-                                                )}
-                                            </StyledTableCell>
+                                                </StyledTableCell>
+                                            )}
                                         </StyledTableRow>
                                     );
                                 })}
                             </TableBody>
                         </Table>
-                    </Paper>
+                    </TableContainer>
                 ) : (
                     <CustomBarChart chartData={attendanceData.map(([name, { present, sessions }]) => ({ subject: name, attendancePercentage: calculateSubjectAttendancePercentage(present, sessions) }))} dataKey="attendancePercentage" />
                 )}
@@ -304,34 +301,27 @@ const ViewStudent = () => {
         const subjectsWithNoMarks = subjectsList?.filter((sub) => !marks.some((m) => m.subName?._id === sub._id));
         return (
             <Box sx={{ pb: 8 }}>
-                <Typography variant="h5" fontWeight="800" sx={{ mb: 4 }}>Academic Performance</Typography>
+                <Typography variant="h5" fontWeight="800" sx={{ mb: 4 }}>Exam Results</Typography>
                 <Grid container spacing={3}>
                     {marks.map((result, index) => (
                         <Grid item xs={12} sm={6} md={4} key={index}>
                             <Card sx={{ borderRadius: 4, border: '1px solid #eee', position: 'relative' }}>
-                                {isTeacher && (
-                                    <IconButton size="small" sx={{ position: 'absolute', top: 12, right: 12 }} onClick={() => removeMark(result.subName?._id)}>
-                                        <DeleteIcon fontSize="small" color="error" />
-                                    </IconButton>
-                                )}
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="subtitle1" fontWeight="700" color="primary">{result.subName?.subName}</Typography>
                                     <Divider sx={{ my: 1.5 }} />
-                                    <Stack direction="row" alignItems="baseline" spacing={1}>
-                                        <Typography variant="h3" fontWeight="900">{result.marksObtained}</Typography>
-                                        <Typography variant="body1" color="text.secondary">/ {result.totalMarks || 100}</Typography>
-                                    </Stack>
-                                    <Button fullWidth variant="outlined" size="small" startIcon={<EditIcon />} sx={{ mt: 2 }} onClick={() => navigate(`/Teacher/class/student/marks/${studentID}/${result.subName?._id}`)}>Edit</Button>
+                                    <Typography variant="h3" fontWeight="900">{result.marksObtained}</Typography>
+                                    <Typography variant="body2" color="textSecondary">Total: {result.totalMarks || 100}</Typography>
+                                    <Button fullWidth variant="text" size="small" startIcon={<EditIcon />} sx={{ mt: 2 }} onClick={() => navigate(`/Teacher/class/student/marks/${studentID}/${result.subName?._id}`)}>Update Marks</Button>
                                 </CardContent>
                             </Card>
                         </Grid>
                     ))}
                     {isTeacher && subjectsWithNoMarks?.map((subject, index) => (
                         <Grid item xs={12} sm={6} md={4} key={`add-${index}`}>
-                            <Card sx={{ borderRadius: 4, border: '1px dashed #ccc', backgroundColor: '#fafafa', textAlign: 'center' }}>
+                            <Card sx={{ borderRadius: 4, border: '1px dashed #ccc', bgcolor: '#fafafa', textAlign: 'center' }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="subtitle1" fontWeight="700" color="textSecondary">{subject.subName}</Typography>
-                                    <Button variant="contained" startIcon={<AddIcon />} sx={{ borderRadius: 2, mt: 2 }} onClick={() => navigate(`/Teacher/class/student/marks/${studentID}/${subject._id}`)}>Add Marks</Button>
+                                    <Button variant="contained" startIcon={<AddIcon />} sx={{ mt: 2 }} onClick={() => navigate(`/Teacher/class/student/marks/${studentID}/${subject._id}`)}>Add Marks</Button>
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -353,15 +343,15 @@ const ViewStudent = () => {
         return (
             <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                    <Typography variant="h5" fontWeight="800">Analytics</Typography>
-                    <Button variant="contained" color="secondary" startIcon={<DownloadIcon />} onClick={downloadPDF}>Report</Button>
+                    <Typography variant="h5" fontWeight="800">Performance Analytics</Typography>
+                    <Button variant="contained" color="secondary" startIcon={<DownloadIcon />} onClick={downloadPDF}>Download Report</Button>
                 </Stack>
-                <Box ref={reportRef} sx={{ p: 4, bgcolor: '#fff', borderRadius: 4 }}>
+                <Box ref={reportRef} sx={{ p: 4, bgcolor: '#fff', borderRadius: 4, border: '1px solid #eee' }}>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
-                            <Card variant="outlined" sx={{ p: 2, borderRadius: 4, bgcolor: '#f8f9fa' }}>
-                                <Typography variant="h4" fontWeight="800" color="primary">{attendanceRate}%</Typography>
-                                <Typography variant="body2">Attendance Rate</Typography>
+                        <Grid item xs={12} md={4}>
+                            <Card sx={{ p: 2, borderRadius: 4, bgcolor: '#f8f9fa', textAlign: 'center', boxShadow: 'none', border: '1px solid #eee' }}>
+                                <Typography variant="h3" fontWeight="900" color="primary">{attendanceRate}%</Typography>
+                                <Typography variant="body2" fontWeight="600">Avg. Attendance</Typography>
                             </Card>
                         </Grid>
                         <Grid item xs={12}>
@@ -401,8 +391,8 @@ const ViewStudent = () => {
                 <TabPanel value="5"><LeaveSection /></TabPanel>
 
                 {(tabValue === '2' || tabValue === '3') && (
-                    <Paper sx={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', borderRadius: 10, zIndex: 1000 }}>
-                        <BottomNavigation action={selectedSection} value={selectedSection} onChange={handleSectionChange} showLabels sx={{ width: 300 }}>
+                    <Paper sx={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', borderRadius: 10, zIndex: 1000, boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}>
+                        <BottomNavigation value={selectedSection} onChange={handleSectionChange} showLabels sx={{ width: 300, borderRadius: 10 }}>
                             <BottomNavigationAction label="Table" value="table" icon={<TableChartIcon />} />
                             <BottomNavigationAction label="Graph" value="chart" icon={<InsightsIcon />} />
                         </BottomNavigation>
@@ -413,7 +403,6 @@ const ViewStudent = () => {
     );
 };
 
-// Helper component for layout
 const InfoBox = ({ icon, label, value, fullWidth = false }) => (
     <Grid item xs={12} sm={fullWidth ? 12 : 6}>
         <Stack direction="row" spacing={2} alignItems="flex-start">
@@ -421,18 +410,16 @@ const InfoBox = ({ icon, label, value, fullWidth = false }) => (
                 p: 1.5, 
                 borderRadius: 2, 
                 bgcolor: alpha('#1976d2', 0.05),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
                 {icon}
             </Box>
             <Box>
-                <Typography variant="caption" color="textSecondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                <Typography variant="caption" color="textSecondary" fontWeight="700" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     {label}
                 </Typography>
                 <Typography variant="body1" fontWeight="700">
-                    {value || "Not Provided"}
+                    {value || "N/A"}
                 </Typography>
             </Box>
         </Stack>

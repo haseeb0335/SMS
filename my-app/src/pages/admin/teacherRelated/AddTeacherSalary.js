@@ -34,6 +34,7 @@ const AddTeacherSalary = () => {
     month: "",
     year: new Date().getFullYear().toString(),
     amount: "",
+    whatsappNumber: "", // New WhatsApp Field
     date: new Date().toISOString().split('T')[0]
   });
 
@@ -41,7 +42,6 @@ const AddTeacherSalary = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentRecordId, setCurrentRecordId] = useState(null);
 
-  // const BASE_URL = "http://localhost:5000";
   const BASE_URL = "https://sms-xi-rose.vercel.app";
 
   useEffect(() => {
@@ -58,6 +58,21 @@ const AddTeacherSalary = () => {
     } catch (err) {
       console.error("Error fetching salaries:", err);
     }
+  };
+
+  // WhatsApp Logic
+  const sendWhatsAppMessage = (data) => {
+    if (!data.whatsappNumber) return;
+
+    const message = `*SALARY DISBURSEMENT: ${currentUser?.schoolName || "School System"}*%0A%0A` +
+      `*Teacher:* ${data.teacherName}%0A` +
+      `*Month/Year:* ${data.month} ${data.year}%0A` +
+      `*Amount Paid:* Rs. ${data.amount}%0A` +
+      `*Date:* ${new Date(data.date).toLocaleDateString()}%0A%0A` +
+      `Your salary has been successfully processed. Thank you!`;
+
+    const whatsappUrl = `https://wa.me/${data.whatsappNumber}?text=${message}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const downloadMonthlyPDF = (groupKey, records) => {
@@ -105,7 +120,7 @@ const AddTeacherSalary = () => {
 
   const handleSave = async () => {
     if (!formData.teacherId || !formData.amount || !formData.month) {
-        toast.error("Please select a teacher and month");
+        toast.error("Please fill required fields");
         return;
     }
 
@@ -128,6 +143,7 @@ const AddTeacherSalary = () => {
     toast.promise(savePromise, {
       loading: 'Saving changes...',
       success: () => {
+        sendWhatsAppMessage(formData); // Auto-send WhatsApp on success
         setIsEditing(false);
         setCurrentRecordId(null);
         setFormData({ 
@@ -136,6 +152,7 @@ const AddTeacherSalary = () => {
             month: "", 
             year: new Date().getFullYear().toString(), 
             amount: "", 
+            whatsappNumber: "",
             date: new Date().toISOString().split('T')[0] 
         });
         fetchAllSalaries();
@@ -200,30 +217,7 @@ const AddTeacherSalary = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 5 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
-      {/* Modern Professional Toaster */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            borderRadius: '16px',
-            background: '#1e293b', // Deep Slate
-            color: '#f8fafc',
-            padding: '16px 24px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            border: '1px solid #334155',
-            fontSize: '14px',
-            fontWeight: '500'
-          },
-          success: {
-            iconTheme: { primary: '#10b981', secondary: '#fff' },
-            style: { borderLeft: '6px solid #10b981' }
-          },
-          error: {
-            iconTheme: { primary: '#ef4444', secondary: '#fff' },
-            style: { borderLeft: '6px solid #ef4444' }
-          },
-        }}
-      />
+      <Toaster position="top-right" />
       
       <Grid container spacing={4} justifyContent="center">
         <Grid item xs={12} xl={11}>
@@ -236,7 +230,6 @@ const AddTeacherSalary = () => {
             </Stack>
 
             <Grid container spacing={3}>
-              {/* Teacher Input - Increased Width to 80% (Grid 10/12) */}
               <Grid item xs={12} lg={10}>
                 <Autocomplete
                   options={teachersList || []}
@@ -267,6 +260,9 @@ const AddTeacherSalary = () => {
                 <TextField label="Amount (Rs)" type="number" name="amount" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} fullWidth />
               </Grid>
               <Grid item xs={12} md={6} lg={3}>
+                <TextField label="WhatsApp Number" name="whatsappNumber" value={formData.whatsappNumber} onChange={(e) => setFormData({...formData, whatsappNumber: e.target.value})} fullWidth placeholder="e.g. 923001234567" />
+              </Grid>
+              <Grid item xs={12} md={6} lg={3}>
                 <TextField type="date" label="Payment Date" InputLabelProps={{ shrink: true }} value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} fullWidth />
               </Grid>
 
@@ -284,7 +280,7 @@ const AddTeacherSalary = () => {
                     variant="outlined"
                     color="inherit" 
                     sx={{ ml: 2, py: 2, px: 4, borderRadius: '12px', textTransform: 'none' }} 
-                    onClick={() => { setIsEditing(false); setFormData({ teacherId: "", teacherName: "", month: "", year: new Date().getFullYear().toString(), amount: "", date: new Date().toISOString().split('T')[0] }); }}
+                    onClick={() => { setIsEditing(false); setFormData({ teacherId: "", teacherName: "", month: "", year: new Date().getFullYear().toString(), amount: "", whatsappNumber: "", date: new Date().toISOString().split('T')[0] }); }}
                    >
                    Cancel Edit
                  </Button>
@@ -294,7 +290,6 @@ const AddTeacherSalary = () => {
           </Paper>
         </Grid>
 
-        {/* Payment History List */}
         <Grid item xs={12} xl={11}>
           <Typography variant="h5" fontWeight="800" mb={3} sx={{ color: '#1e293b' }}>Payment Logs</Typography>
           
