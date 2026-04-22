@@ -84,9 +84,9 @@ const SideBar = () => {
                 </ListItemButton>
 
         {/* AI assitant */}
-                <ListItemButton component={Link} to="/Admin/ai-assistant">
+                <ListItemButton component={Link} to="ai">
     <ListItemIcon>
-        <SmartToyIcon color={location.pathname.startsWith("/Admin/ai-assistant") ? 'primary' : 'inherit'} />
+        <SmartToyIcon color={location.pathname.startsWith("ai") ? 'primary' : 'inherit'} />
     </ListItemIcon>
     <ListItemText primary="AI Assistant" />
 </ListItemButton>

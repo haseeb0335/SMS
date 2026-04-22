@@ -177,7 +177,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/addparent" element={<AddParent />} />
                         <Route path="/Admin/expenses" element={<ExpenseManagement />} />
                         
-                        <Route path="/Admin/ai" element={<AiAssistant />} />
+                        <Route path="ai" element={<AiAssistant />} />
                         <Route path="/logout" element={<Logout />} />
                     </Routes>
                 </Box>

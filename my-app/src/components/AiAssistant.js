@@ -37,28 +37,32 @@ const AiAssistant = () => {
         }
     };
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
+   const handleSend = async () => {
+    if (!input.trim()) return;
 
-        const userMsg = { role: 'user', text: input };
-        setMessages(prev => [...prev, userMsg]);
-        setInput("");
-        setLoading(true);
+    setLoading(true);
+    try {
+        // 1. Gather context from your existing state or a quick API call
+        const context = {
+            adminName: currentUser.name,
+            expenses: expenses // Your expenses state variable
+        };
 
-        try {
-            const context = await getSchoolContext();
-            const response = await axios.post(`${BASE_URL}/AskAI`, {
-                question: input,
-                contextData: context
-            });
+        // 2. Send to backend
+        const res = await axios.post(`${BASE_URL}/AskAI`, {
+            question: input,
+            contextData: context
+        });
 
-            setMessages(prev => [...prev, { role: 'ai', text: response.data.answer }]);
-        } catch (err) {
-            setMessages(prev => [...prev, { role: 'ai', text: "I'm having trouble connecting to the brain. Please check your backend AI route." }]);
-        } finally {
-            setLoading(false);
-        }
-    };
+        // 3. Update the UI with the answer
+        setMessages(prev => [...prev, { role: 'ai', text: res.data.answer }]);
+    } catch (err) {
+        console.error("Frontend AI Error:", err);
+        setMessages(prev => [...prev, { role: 'ai', text: "Error: Could not reach the AI server." }]);
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <Box sx={{ p: 4, height: '85vh', display: 'flex', flexDirection: 'column' }}>

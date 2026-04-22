@@ -1,28 +1,30 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Make sure to add GEMINI_API_KEY to your Vercel/Local .env file
+// Access the key from process.env
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const askAI = async (req, res) => {
     try {
         const { question, contextData } = req.body;
+        
+        // Initialize the Gemini Pro model
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
+        // Prepare a prompt that gives the AI the "context" of your school
         const prompt = `
-            You are "SMS AI", an expert school management assistant.
+            You are "SMS AI", an intelligent assistant for a School Management System.
             
-            CONTEXT DATA:
-            - Admin Name: ${contextData.adminName}
-            - School: ${contextData.schoolName}
-            - Recent Expenses: ${JSON.stringify(contextData.expenses)}
-            
-            USER QUESTION: "${question}"
-            
-            INSTRUCTIONS:
-            1. Use the data above to answer specifically.
-            2. If asked about total expenses, sum the "amount" fields.
-            3. Be professional, concise, and helpful.
-            4. If the data isn't there, say you don't have that specific record.
+            Current Context:
+            - Admin User: ${contextData?.adminName || "Admin"}
+            - Total Expenses Found: ${contextData?.expenses?.length || 0}
+            - Data Preview: ${JSON.stringify(contextData?.expenses?.slice(0, 20))}
+
+            User Question: "${question}"
+
+            Instructions:
+            1. If the user asks about total spending, calculate it from the data.
+            2. Be professional and concise.
+            3. If you don't have enough data to answer, politely let the user know.
         `;
 
         const result = await model.generateContent(prompt);
@@ -31,8 +33,11 @@ const askAI = async (req, res) => {
         
         res.status(200).json({ answer: text });
     } catch (error) {
-        console.error("AI Error:", error);
-        res.status(500).json({ message: "AI processing failed", error: error.message });
+        console.error("AI Controller Error:", error);
+        res.status(500).json({ 
+            message: "The AI is having trouble processing that request.", 
+            error: error.message 
+        });
     }
 };
 
