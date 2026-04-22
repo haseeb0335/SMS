@@ -5,45 +5,40 @@ const askAI = async (req, res) => {
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.log("❌ API KEY MISSING");
-            return res.status(500).json({ message: "API key missing" });
+            console.error("API KEY missing");
+            return res.status(500).json({ message: "API Key missing" });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
         const { question, contextData } = req.body;
 
-        // ✅ LIMIT DATA (VERY IMPORTANT)
-        const safeExpenses = contextData?.expenses?.slice(0, 5) || [];
+        // ✅ UPDATED MODEL
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash" 
+        });
 
         const prompt = `
-You are a School Management AI.
+        You are "SMS AI", assistant for a School Management System.
 
-Admin: ${contextData?.adminName}
+        Admin: ${contextData?.adminName || "User"}
+        School: ${contextData?.schoolName || "School"}
 
-Expenses:
-${JSON.stringify(safeExpenses)}
+        Expenses Data:
+        ${JSON.stringify(contextData?.expenses?.slice(0, 10) || [])}
 
-Question:
-${question}
-`;
+        Question:
+        ${question}
+        `;
 
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash"
-        });
-
-        // ✅ FIXED CALL (IMPORTANT)
-        const result = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }]
-        });
-
-        const text = result.response.text();
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
         res.status(200).json({ answer: text });
 
     } catch (error) {
-        console.error("🔥 FULL ERROR:", error);
-
+        console.error("AI ERROR FULL:", error);
         res.status(500).json({
             message: "AI failed",
             error: error.message
