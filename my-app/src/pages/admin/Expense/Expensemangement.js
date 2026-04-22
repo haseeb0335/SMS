@@ -9,10 +9,13 @@ import {
   Print as PrintIcon, 
   Add as AddIcon, 
   Edit as EditIcon,
-  Cancel as CancelIcon 
+  Cancel as CancelIcon,
+  Download as DownloadIcon // New Icon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; // Import autoTable directly
 
 const BASE_URL = "https://sms-xi-rose.vercel.app";
 const categories = ['Utilities', 'Salaries', 'Maintenance', 'Stationery', 'Events', 'Other'];
@@ -29,11 +32,9 @@ const ExpenseManagement = () => {
     amount: '',
   });
 
-  // Replace with your actual admin ID from Redux/LocalStorage
   const { currentUser } = useSelector(state => state.user);
   const adminID = currentUser._id;
 
-  // 1. Fetch Expenses from Backend
   const fetchExpenses = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/ExpenseList/${adminID}`);
@@ -49,27 +50,86 @@ const ExpenseManagement = () => {
     fetchExpenses();
   }, []);
 
-  // 2. Add or Update Expense
+  // --- PDF GENERATION LOGIC ---
+
+  // 1. Download ALL Expenses
+  const downloadAllExpensesPDF = () => {
+    const doc = new jsPDF();
+    doc.text("School Expense Report", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+    
+    const tableColumn = ["Date", "Category", "Description", "Amount (Rs)"];
+    const tableRows = [];
+
+    expenses.forEach(expense => {
+      const rowData = [
+        new Date(expense.date).toLocaleDateString(),
+        expense.category,
+        expense.description,
+        expense.amount.toLocaleString()
+      ];
+      tableRows.push(rowData);
+    });
+
+    // CHANGE: Use autoTable(doc, { ... }) instead of doc.autoTable
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillStyle: '#1e293b' } // Matches your dashboard theme
+    });
+
+    // To get the final Y position for the total:
+    const finalY = doc.lastAutoTable.finalY; 
+    doc.text(`Total Monthly Expense: Rs. ${totalExpense.toLocaleString()}`, 14, finalY + 10);
+    
+    doc.save("School_Expenses_Full_Report.pdf");
+  };
+
+  // 2. Download INDIVIDUAL Receipt
+  const downloadIndividualExpensePDF = (expense) => {
+    const doc = new jsPDF();
+    doc.rect(10, 10, 190, 80); // Border
+    doc.setFontSize(18);
+    doc.text("EXPENSE VOUCHER", 70, 25);
+    
+    doc.setFontSize(12);
+    doc.text(`Voucher ID: ${expense._id.substring(0, 8)}`, 20, 40);
+    doc.text(`Date: ${new Date(expense.date).toLocaleDateString()}`, 20, 50);
+    doc.text(`Category: ${expense.category}`, 20, 60);
+    doc.text(`Description: ${expense.description}`, 20, 70);
+    
+    doc.setFontSize(14);
+    doc.text(`TOTAL AMOUNT: Rs. ${expense.amount.toLocaleString()}`, 120, 70);
+    
+    doc.setFontSize(10);
+    doc.text("Authorized Signature: __________________", 20, 85);
+    
+    doc.save(`Receipt_${expense.category}_${expense._id.substring(0, 5)}.pdf`);
+  };
+
+  // --- REMAINDER OF YOUR LOGIC ---
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (isEditing) {
-        // Update Logic (Note: You might need to add a PUT route in your backend)
         await axios.put(`${BASE_URL}/ExpenseUpdate/${currentId}`, formData);
         setIsEditing(false);
         setCurrentId(null);
       } else {
-        // Add Logic
         await axios.post(`${BASE_URL}/ExpenseCreate`, { ...formData, adminID });
       }
       setFormData({ date: '', category: '', description: '', amount: '' });
-      fetchExpenses(); // Refresh list
+      fetchExpenses();
     } catch (err) {
       alert("Failed to save expense");
     }
   };
 
-  // 3. Delete Expense
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       try {
@@ -81,12 +141,11 @@ const ExpenseManagement = () => {
     }
   };
 
-  // 4. Set form for Editing
   const handleEditClick = (expense) => {
     setIsEditing(true);
-    setCurrentId(expense._id); // MongoDB uses _id
+    setCurrentId(expense._id);
     setFormData({
-      date: expense.date.split('T')[0], // Format date for input
+      date: expense.date.split('T')[0],
       category: expense.category,
       description: expense.description,
       amount: expense.amount,
@@ -97,9 +156,20 @@ const ExpenseManagement = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold', color: '#1e293b' }}>
-        School Expense Management
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1e293b' }}>
+          School Expense Management
+        </Typography>
+        {/* DOWNLOAD ALL BUTTON */}
+        <Button 
+          variant="contained" 
+          color="success" 
+          startIcon={<DownloadIcon />}
+          onClick={downloadAllExpensesPDF}
+        >
+          Download Report (PDF)
+        </Button>
+      </Box>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
@@ -112,6 +182,7 @@ const ExpenseManagement = () => {
         </Grid>
       </Grid>
 
+      {/* Form (Same as before) */}
       <Paper sx={{ p: 3, mb: 4, borderRadius: 3, border: isEditing ? '2px solid #1976d2' : 'none' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           {isEditing ? "Update Expense Record" : "Add New Expense"}
@@ -175,8 +246,16 @@ const ExpenseManagement = () => {
                 <TableCell>{expense.description}</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>{expense.amount.toLocaleString()}</TableCell>
                 <TableCell align="right">
-                  <IconButton color="primary" onClick={() => handleEditClick(expense)}><EditIcon fontSize="small" /></IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(expense._id)}><DeleteIcon fontSize="small" /></IconButton>
+                  {/* INDIVIDUAL DOWNLOAD BUTTON */}
+                  <IconButton color="success" onClick={() => downloadIndividualExpensePDF(expense)}>
+                    <PrintIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton color="primary" onClick={() => handleEditClick(expense)}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton color="error" onClick={() => handleDelete(expense._id)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}

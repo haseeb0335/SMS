@@ -14,6 +14,7 @@ import ReportIcon from '@mui/icons-material/Report';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'; // New Icon for Parents
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 const SideBar = () => {
     const location = useLocation();
@@ -81,6 +82,14 @@ const SideBar = () => {
                     </ListItemIcon>
                     <ListItemText primary="Teacher Salary" />
                 </ListItemButton>
+
+        {/* AI assitant */}
+                <ListItemButton component={Link} to="/Admin/ai-assistant">
+    <ListItemIcon>
+        <SmartToyIcon color={location.pathname.startsWith("/Admin/ai-assistant") ? 'primary' : 'inherit'} />
+    </ListItemIcon>
+    <ListItemText primary="AI Assistant" />
+</ListItemButton>
 
                 <ListItemButton component={Link} to="/Admin/notices">
                     <ListItemIcon>

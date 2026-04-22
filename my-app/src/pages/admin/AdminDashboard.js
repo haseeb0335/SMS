@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, Outlet } from 'react-router-dom'; // Added Outlet here
 import { useSelector } from 'react-redux';
 
 import { AppBar, Drawer } from '../../components/styles';
@@ -46,6 +46,8 @@ import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
 import ShowClasses from './classRelated/ShowClasses';
 import ExpenseManagement from './Expense/Expensemangement';
+import AiAssistant from '../../components/AiAssistant';
+import FloatingAI from '../../components/FloatingAI'; // Corrected path to components folder
 
 import AccountMenu from '../../components/AccountMenu';
 
@@ -57,7 +59,6 @@ const AdminDashboard = () => {
         setOpen(!open);
     };
 
-    // ✅ GET ADMIN DATA FROM REDUX
     const { currentUser } = useSelector((state) => state.user);
 
     return (
@@ -67,7 +68,6 @@ const AdminDashboard = () => {
 
                 <AppBar open={open} position='absolute'>
                     <Toolbar sx={{ pr: '24px' }}>
-
                         <IconButton
                             edge="start"
                             color="inherit"
@@ -91,9 +91,7 @@ const AdminDashboard = () => {
                             Admin Dashboard
                         </Typography>
 
-                        {/* ✅ PROFILE IMAGE NOW COMES FROM REDUX */}
                         <AccountMenu profilePic={currentUser?.profilePic} />
-
                     </Toolbar>
                 </AppBar>
 
@@ -116,11 +114,12 @@ const AdminDashboard = () => {
                 </Drawer>
 
                 <Box component="main" sx={styles.boxStyled}>
-
                     <Toolbar />
 
-                    <Routes>
+                    {/* This ensures the AI Floating icon stays globally accessible */}
+                    <FloatingAI />
 
+                    <Routes>
                         <Route path="/" element={<AdminHomePage />} />
                         <Route path='*' element={<Navigate to="/" />} />
 
@@ -131,12 +130,9 @@ const AdminDashboard = () => {
                         <Route path="/Admin/fees" element={<AddFees />} />
                         <Route path="/Admin/showfees" element={<ShowFees />} />
 
-                        {/* Notice */}
                         <Route path="/Admin/addnotice" element={<AddNotice />} />
                         <Route path="/Admin/notices" element={<ShowNotices />} />
-                        
 
-                        {/* Subject */}
                         <Route path="/Admin/subjects" element={<ShowSubjects />} />
                         <Route path="/Admin/subjects/subject/:classID/:subjectID" element={<ViewSubject />} />
                         <Route path="/Admin/subjects/chooseclass" element={<ChooseClass situation="Subject" />} />
@@ -153,13 +149,11 @@ const AdminDashboard = () => {
                             element={<StudentExamMarks situation="Subject" />}
                         />
 
-                        {/* Class */}
                         <Route path="/Admin/addclass" element={<AddClass />} />
                         <Route path="/Admin/classes" element={<ShowClasses />} />
                         <Route path="/Admin/classes/class/:id" element={<ClassDetails />} />
                         <Route path="/Admin/class/addstudents/:id" element={<AddStudent situation="Class" />} />
 
-                        {/* Student */}
                         <Route path="/Admin/addstudents" element={<AddStudent situation="Student" />} />
                         <Route path="/Admin/students" element={<ShowStudents />} />
                         <Route path="/Admin/students/student/:id" element={<ViewStudent />} />
@@ -174,7 +168,6 @@ const AdminDashboard = () => {
                             element={<StudentExamMarks situation="Student" />}
                         />
 
-                        {/* Teacher */}
                         <Route path="/Admin/teachers" element={<ShowTeachers />} />
                         <Route path="/Admin/teachers/teacher/:id" element={<TeacherDetails />} />
                         <Route path="/Admin/teachers/chooseclass" element={<ChooseClass situation="Teacher" />} />
@@ -183,15 +176,10 @@ const AdminDashboard = () => {
                         <Route path="/Admin/teachers/addteacher/:id" element={<AddTeacher />} />
                         <Route path="/Admin/addparent" element={<AddParent />} />
                         <Route path="/Admin/expenses" element={<ExpenseManagement />} />
-                        <Route
-                                    path="/Admin/teacher-salary"
-                                    element={<AddTeacherSalary />}
-                                    />
-
+                        
+                        <Route path="/Admin/ai" element={<AiAssistant />} />
                         <Route path="/logout" element={<Logout />} />
-
                     </Routes>
-
                 </Box>
             </Box>
         </>
@@ -201,7 +189,6 @@ const AdminDashboard = () => {
 export default AdminDashboard;
 
 const styles = {
-
     boxStyled: {
         backgroundColor: (theme) =>
             theme.palette.mode === 'light'
@@ -209,20 +196,18 @@ const styles = {
                 : theme.palette.grey[900],
         flexGrow: 1,
         height: '100vh',
+        padding: '24px', // Added padding for better spacing
         overflow: 'auto',
     },
-
     toolBarStyled: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
         px: [1],
     },
-
     drawerStyled: {
         display: "flex"
     },
-
     hideDrawer: {
         display: 'flex',
         '@media (max-width: 600px)': {
