@@ -13,6 +13,7 @@ import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccount
 import ReportIcon from '@mui/icons-material/Report';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'; // New Icon for Parents
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 const SideBar = () => {
     const location = useLocation();
@@ -64,6 +65,16 @@ const SideBar = () => {
                     </ListItemIcon>
                     <ListItemText primary="Fees Collection" />
                 </ListItemButton>
+
+                {/* --- NEW EXPENSE MANAGEMENT OPTION --- */}
+                <ListItemButton component={Link} to="/Admin/expenses">
+                    <ListItemIcon>
+                        <AccountBalanceWalletIcon color={location.pathname.startsWith("/Admin/expenses") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Expenses" />
+                </ListItemButton>
+
+
                 <ListItemButton component={Link} to="/Admin/teacher-salary">
                     <ListItemIcon>
                         <AttachMoneyIcon color={location.pathname.startsWith("/Admin/teacher-salary") ? 'primary' : 'inherit'} />

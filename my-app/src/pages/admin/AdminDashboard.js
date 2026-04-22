@@ -45,6 +45,7 @@ import AddTeacherSalary from "./teacherRelated/AddTeacherSalary";
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
 import ShowClasses from './classRelated/ShowClasses';
+import ExpenseManagement from './Expense/Expensemangement';
 
 import AccountMenu from '../../components/AccountMenu';
 
@@ -181,6 +182,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/teachers/choosesubject/:classID/:teacherID" element={<ChooseSubject situation="Teacher" />} />
                         <Route path="/Admin/teachers/addteacher/:id" element={<AddTeacher />} />
                         <Route path="/Admin/addparent" element={<AddParent />} />
+                        <Route path="/Admin/expenses" element={<ExpenseManagement />} />
                         <Route
                                     path="/Admin/teacher-salary"
                                     element={<AddTeacherSalary />}

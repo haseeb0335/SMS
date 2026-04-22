@@ -36,6 +36,7 @@ const {
 const { subjectCreate, classSubjects, deleteSubjectsByClass, getSubjectDetail, deleteSubject, freeSubjectList, allSubjects, deleteSubjects } = require('../controllers/subject-controller.js');
 const { teacherRegister, teacherLogIn, getTeachers, getTeachersByClass, getTeacherAttendance,  getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubject, teacherAttendance,updateTeacher,deleteTeacherAttendance,removeTeacherAttendance, } = require('../controllers/teacher-controller.js');
 const { addFees, getStudentFees,getAllFees, deleteFee, editFee } = require("../controllers/Fees-controller.js");
+const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../controllers/expense-controller.js');
 // Admin
 router.post('/AdminReg', adminRegister);
 router.post('/AdminLogin', adminLogIn);
@@ -69,6 +70,12 @@ router.get("/TeacherSalaries/:id", getTeacherSalaries);
 router.get("/AllSalaries/:id", getAllSalaries);
 router.delete("/DeleteSalary/:id", deleteSalary); 
 router.put("/EditSalary/:id", editSalary);
+
+// expense 
+router.post('/ExpenseCreate', addExpense);
+router.get('/ExpenseList/:id', getExpenses); // :id is the Admin/School ID
+router.delete('/ExpenseDelete/:id', deleteExpense);
+router.put('/ExpenseUpdate/:id', updateExpense);
 
 
 // Student
