@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
     Box, Typography, TextField, Paper, IconButton, 
-    CircularProgress, Avatar, Divider, Chip, Stack 
+    CircularProgress, Avatar, Stack 
 } from '@mui/material';
 import { 
     Send as SendIcon, 
     SmartToy as RobotIcon, 
-    Person as UserIcon,
-    AutoGraph as GraphIcon 
+    Person as UserIcon 
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
@@ -26,43 +25,50 @@ const AiAssistant = () => {
     const getSchoolContext = async () => {
         try {
             const expenseRes = await axios.get(`${BASE_URL}/ExpenseList/${currentUser._id}`);
-            // You can add more fetches here (students, teachers, etc.)
             return {
                 expenses: expenseRes.data,
                 adminName: currentUser.name,
                 schoolName: currentUser.schoolName || "the school"
             };
         } catch (err) {
-            return { error: "Could not fetch current context" };
+            console.error("Context Fetch Error:", err);
+            return { 
+                expenses: [], 
+                adminName: currentUser.name, 
+                schoolName: "the school" 
+            };
         }
     };
 
-   const handleSend = async () => {
-    if (!input.trim()) return;
+    const handleSend = async () => {
+        if (!input.trim()) return;
 
-    setLoading(true);
-    try {
-        // 1. Gather context from your existing state or a quick API call
-        const context = {
-            adminName: currentUser.name,
-            expenses: expenses // Your expenses state variable
-        };
+        // Add user message to UI immediately
+        const userMessage = { role: 'user', text: input };
+        setMessages(prev => [...prev, userMessage]);
+        const currentInput = input;
+        setInput("");
+        setLoading(true);
 
-        // 2. Send to backend
-        const res = await axios.post(`${BASE_URL}/AskAI`, {
-            question: input,
-            contextData: context
-        });
+        try {
+            // 1. CALL THE CONTEXT FUNCTION TO FIX THE 'expenses is not defined' ERROR
+            const context = await getSchoolContext();
 
-        // 3. Update the UI with the answer
-        setMessages(prev => [...prev, { role: 'ai', text: res.data.answer }]);
-    } catch (err) {
-        console.error("Frontend AI Error:", err);
-        setMessages(prev => [...prev, { role: 'ai', text: "Error: Could not reach the AI server." }]);
-    } finally {
-        setLoading(false);
-    }
-};
+            // 2. Send to backend
+            const res = await axios.post(`${BASE_URL}/AskAI`, {
+                question: currentInput,
+                contextData: context
+            });
+
+            // 3. Update the UI with the AI answer
+            setMessages(prev => [...prev, { role: 'ai', text: res.data.answer }]);
+        } catch (err) {
+            console.error("Frontend AI Error:", err);
+            setMessages(prev => [...prev, { role: 'ai', text: "Error: Could not reach the AI server. Please check your backend." }]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <Box sx={{ p: 4, height: '85vh', display: 'flex', flexDirection: 'column' }}>
