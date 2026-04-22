@@ -1,30 +1,27 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Access the key from process.env
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 const askAI = async (req, res) => {
     try {
+        // 1. Check if key exists in environment
+        const apiKey = process.env.GEMINI_API_KEY;
+        
+        if (!apiKey) {
+            console.error("Backend Error: GEMINI_API_KEY is missing from environment variables.");
+            return res.status(500).json({ message: "Server configuration error: API Key missing." });
+        }
+
+        // 2. Initialize inside the request handler
+        const genAI = new GoogleGenerativeAI(apiKey);
         const { question, contextData } = req.body;
         
-        // Initialize the Gemini Pro model
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        // Prepare a prompt that gives the AI the "context" of your school
         const prompt = `
             You are "SMS AI", an intelligent assistant for a School Management System.
+            Admin: ${contextData?.adminName || "User"}
+            Context: ${JSON.stringify(contextData?.expenses?.slice(0, 15) || [])}
             
-            Current Context:
-            - Admin User: ${contextData?.adminName || "Admin"}
-            - Total Expenses Found: ${contextData?.expenses?.length || 0}
-            - Data Preview: ${JSON.stringify(contextData?.expenses?.slice(0, 20))}
-
-            User Question: "${question}"
-
-            Instructions:
-            1. If the user asks about total spending, calculate it from the data.
-            2. Be professional and concise.
-            3. If you don't have enough data to answer, politely let the user know.
+            Question: "${question}"
         `;
 
         const result = await model.generateContent(prompt);
@@ -33,11 +30,8 @@ const askAI = async (req, res) => {
         
         res.status(200).json({ answer: text });
     } catch (error) {
-        console.error("AI Controller Error:", error);
-        res.status(500).json({ 
-            message: "The AI is having trouble processing that request.", 
-            error: error.message 
-        });
+        console.error("AI Error:", error.message);
+        res.status(500).json({ message: "AI processing failed", error: error.message });
     }
 };
 
