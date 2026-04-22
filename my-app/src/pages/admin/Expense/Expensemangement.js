@@ -12,7 +12,9 @@ import {
   Cancel as CancelIcon 
 } from '@mui/icons-material';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 const categories = ['Utilities', 'Salaries', 'Maintenance', 'Stationery', 'Events', 'Other'];
 
 const ExpenseManagement = () => {
@@ -28,12 +30,13 @@ const ExpenseManagement = () => {
   });
 
   // Replace with your actual admin ID from Redux/LocalStorage
-  const adminID = "YOUR_ADMIN_ID"; 
+  const { currentUser } = useSelector(state => state.user);
+  const adminID = currentUser._id;
 
   // 1. Fetch Expenses from Backend
   const fetchExpenses = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/ExpenseList/${adminID}`);
+      const res = await axios.get(`${BASE_URL}/ExpenseList/${adminID}`);
       if (res.data && Array.isArray(res.data)) {
         setExpenses(res.data);
       }
@@ -52,12 +55,12 @@ const ExpenseManagement = () => {
     try {
       if (isEditing) {
         // Update Logic (Note: You might need to add a PUT route in your backend)
-        await axios.put(`http://localhost:5000/ExpenseUpdate/${currentId}`, formData);
+        await axios.put(`${BASE_URL}/ExpenseUpdate/${currentId}`, formData);
         setIsEditing(false);
         setCurrentId(null);
       } else {
         // Add Logic
-        await axios.post('http://localhost:5000/ExpenseCreate', { ...formData, adminID });
+        await axios.post(`${BASE_URL}/ExpenseCreate`, { ...formData, adminID });
       }
       setFormData({ date: '', category: '', description: '', amount: '' });
       fetchExpenses(); // Refresh list
@@ -70,7 +73,7 @@ const ExpenseManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       try {
-        await axios.delete(`http://localhost:5000/ExpenseDelete/${id}`);
+        await axios.delete(`${BASE_URL}/ExpenseDelete/${id}`);
         fetchExpenses();
       } catch (err) {
         console.error("Delete failed", err);
