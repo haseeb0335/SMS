@@ -68,9 +68,13 @@ const AiAssistant = () => {
                 setMessages(prev => [...prev, { role: 'ai', text: "I'm sorry, I couldn't generate an answer. Please try again." }]);
             }
         } catch (err) {
-            console.error("Frontend AI Error:", err);
-            setMessages(prev => [...prev, { role: 'ai', text: "Error: Could not reach the AI server. Check your backend deployment." }]);
-        } finally {
+    console.error("FULL FRONTEND ERROR:", err.response?.data || err);
+           
+    setMessages(prev => [
+        ...prev,
+        { role: 'ai', text: err.response?.data?.error || "Server error" }
+    ]);
+} finally {
             setLoading(false);
         }
     };
