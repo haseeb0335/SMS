@@ -26,7 +26,7 @@ const AiAssistant = () => {
         try {
             const expenseRes = await axios.get(`${BASE_URL}/ExpenseList/${currentUser._id}`);
             return {
-                expenses: expenseRes.data,
+                expenses: expenseRes.data || [],
                 adminName: currentUser.name,
                 schoolName: currentUser.schoolName || "the school"
             };
@@ -43,28 +43,33 @@ const AiAssistant = () => {
     const handleSend = async () => {
         if (!input.trim()) return;
 
-        // Add user message to UI immediately
         const userMessage = { role: 'user', text: input };
         setMessages(prev => [...prev, userMessage]);
+        
         const currentInput = input;
         setInput("");
         setLoading(true);
 
         try {
-            // 1. CALL THE CONTEXT FUNCTION TO FIX THE 'expenses is not defined' ERROR
+            // 1. FETCH THE CONTEXT
             const context = await getSchoolContext();
 
-            // 2. Send to backend
+            // 2. SEND TO BACKEND
+            // Note: 'context' now contains the 'expenses' data inside it
             const res = await axios.post(`${BASE_URL}/AskAI`, {
                 question: currentInput,
                 contextData: context
             });
 
-            // 3. Update the UI with the AI answer
-            setMessages(prev => [...prev, { role: 'ai', text: res.data.answer }]);
+            // 3. UPDATE UI
+            if (res.data && res.data.answer) {
+                setMessages(prev => [...prev, { role: 'ai', text: res.data.answer }]);
+            } else {
+                setMessages(prev => [...prev, { role: 'ai', text: "I'm sorry, I couldn't generate an answer. Please try again." }]);
+            }
         } catch (err) {
             console.error("Frontend AI Error:", err);
-            setMessages(prev => [...prev, { role: 'ai', text: "Error: Could not reach the AI server. Please check your backend." }]);
+            setMessages(prev => [...prev, { role: 'ai', text: "Error: Could not reach the AI server. Check your backend deployment." }]);
         } finally {
             setLoading(false);
         }
@@ -95,7 +100,7 @@ const AiAssistant = () => {
             <Box sx={{ display: 'flex', gap: 2 }}>
                 <TextField
                     fullWidth
-                    placeholder="e.g., 'What was our total expense last month?'"
+                    placeholder="Ask me something..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
