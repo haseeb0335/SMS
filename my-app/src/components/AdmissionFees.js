@@ -31,7 +31,7 @@ const AdmissionFees = () => {
     // FETCH: Get all admissions from the DB
     const fetchAdmissions = async () => {
         try {
-            const res = await axios.get(`${BASE_URL}/api/Admissions`);
+            const res = await axios.get(`${BASE_URL}/Admissions`);
             setRecords(res.data);
         } catch (err) {
             console.error("Error fetching admissions:", err);
@@ -132,11 +132,11 @@ const AdmissionFees = () => {
             if (editIndex !== null) {
                 // UPDATE: PUT /api/Admission/:id
                 const id = records[editIndex]._id;
-                await axios.put(`${BASE_URL}/api/Admission/${id}`, formData);
+                await axios.put(`${BASE_URL}/Admission/${id}`, formData);
                 setEditIndex(null);
             } else {
                 // CREATE: POST /api/AdmissionFees
-                await axios.post(`${BASE_URL}/api/AdmissionFees`, formData);
+                await axios.post(`${BASE_URL}/AdmissionFees`, formData);
                 sendWhatsAppMessage(formData);
             }
             fetchAdmissions(); // Refresh list from DB
@@ -151,7 +151,7 @@ const AdmissionFees = () => {
         if (window.confirm("Are you sure you want to delete this record?")) {
             try {
                 // DELETE: /api/Admission/:id
-                await axios.delete(`${BASE_URL}/api/Admission/${row._id}`);
+                await axios.delete(`${BASE_URL}/Admission/${row._id}`);
                 fetchAdmissions();
             } catch (err) {
                 alert("Error deleting record.");
