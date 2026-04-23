@@ -176,6 +176,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/teachers/addteacher/:id" element={<AddTeacher />} />
                         <Route path="/Admin/addparent" element={<AddParent />} />
                         <Route path="/Admin/expenses" element={<ExpenseManagement />} />
+                        <Route path="/Admin/teacher-salary" element={<AddTeacherSalary />} />
                         
                         <Route path="ai" element={<AiAssistant />} />
                         <Route path="/logout" element={<Logout />} />
