@@ -38,12 +38,20 @@ const { teacherRegister, teacherLogIn, getTeachers, getTeachersByClass, getTeach
 const { addFees, getStudentFees,getAllFees, deleteFee, editFee } = require("../controllers/Fees-controller.js");
 const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../controllers/expense-controller.js');
 const { askAI } = require('../controllers/ai-controller.js');
+const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission } = require('../controllers/admission-controller.js');
 // Admin
 router.post('/AdminReg', adminRegister);
 router.post('/AdminLogin', adminLogIn);
 router.get("/Admin/:id", getAdminDetail)
 router.delete("/Admin/:id", deleteAdmin)
 router.put("/Admin/:id", updateAdmin)
+
+// Admission Fees
+router.post('/AdmissionFees', createAdmission);
+router.get('/Admissions', getAllAdmissions);
+router.put('/Admission/:id', updateAdmission);
+router.delete('/Admission/:id', deleteAdmission);
+
 
 // AI Route
 router.post('/AskAI', askAI);

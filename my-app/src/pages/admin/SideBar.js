@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { Divider, ListItemButton, ListItemIcon, ListItemText, ListSubheader } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
-import PaymentsIcon from '@mui/icons-material/Payments';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import HomeIcon from "@mui/icons-material/Home";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
@@ -12,7 +10,7 @@ import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
 import ReportIcon from '@mui/icons-material/Report';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'; // New Icon for Parents
+import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'; 
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 
@@ -52,7 +50,6 @@ const SideBar = () => {
                     <ListItemText primary="Students" />
                 </ListItemButton>
 
-                {/* ADDED PARENTS OPTION HERE */}
                 <ListItemButton component={Link} to="/Admin/addparent">
                     <ListItemIcon>
                         <FamilyRestroomIcon color={location.pathname.startsWith("/Admin/addparent") ? 'primary' : 'inherit'} />
@@ -60,36 +57,20 @@ const SideBar = () => {
                     <ListItemText primary="Parents" />
                 </ListItemButton>
 
-                <ListItemButton component={Link} to="/Admin/fees">
+                {/* SINGLE ACCOUNTS ICON */}
+                <ListItemButton component={Link} to="/Admin/accounts">
                     <ListItemIcon>
-                        <PaymentsIcon color={location.pathname.startsWith("/Admin/fees") ? 'primary' : 'inherit'} />
+                        <AccountBalanceWalletIcon color={location.pathname.startsWith("/Admin/accounts") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
-                    <ListItemText primary="Fees Collection" />
+                    <ListItemText primary="Accounts" />
                 </ListItemButton>
 
-                {/* --- NEW EXPENSE MANAGEMENT OPTION --- */}
-                <ListItemButton component={Link} to="/Admin/expenses">
-                    <ListItemIcon>
-                        <AccountBalanceWalletIcon color={location.pathname.startsWith("/Admin/expenses") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Expenses" />
-                </ListItemButton>
-
-
-                <ListItemButton component={Link} to="/Admin/teacher-salary">
-                    <ListItemIcon>
-                        <AttachMoneyIcon color={location.pathname.startsWith("/Admin/teacher-salary") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Teacher Salary" />
-                </ListItemButton>
-
-        {/* AI assitant */}
                 <ListItemButton component={Link} to="ai">
-    <ListItemIcon>
-        <SmartToyIcon color={location.pathname.startsWith("ai") ? 'primary' : 'inherit'} />
-    </ListItemIcon>
-    <ListItemText primary="AI Assistant" />
-</ListItemButton>
+                    <ListItemIcon>
+                        <SmartToyIcon color={location.pathname.startsWith("ai") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="AI Assistant" />
+                </ListItemButton>
 
                 <ListItemButton component={Link} to="/Admin/notices">
                     <ListItemIcon>
@@ -106,9 +87,7 @@ const SideBar = () => {
             </React.Fragment>
             <Divider sx={{ my: 1 }} />
             <React.Fragment>
-                <ListSubheader component="div" inset>
-                    User
-                </ListSubheader>
+                <ListSubheader component="div" inset>User</ListSubheader>
                 <ListItemButton component={Link} to="/Admin/profile">
                     <ListItemIcon>
                         <AccountCircleOutlinedIcon color={location.pathname.startsWith("/Admin/profile") ? 'primary' : 'inherit'} />
@@ -126,4 +105,4 @@ const SideBar = () => {
     )
 }
 
-export default SideBar
+export default SideBar;

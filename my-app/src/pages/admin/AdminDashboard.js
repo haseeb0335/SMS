@@ -48,8 +48,10 @@ import ShowClasses from './classRelated/ShowClasses';
 import ExpenseManagement from './Expense/Expensemangement';
 import AiAssistant from '../../components/AiAssistant';
 import FloatingAI from '../../components/FloatingAI'; // Corrected path to components folder
-
+import AdminAccounts from '../../components/AdminAccounts'; // New component for accounts management
 import AccountMenu from '../../components/AccountMenu';
+import ExamFees from '../../components/ExamFees'; // New component for exam fee structure management
+import AdmissionFees from '../../components/AdmissionFees';
 
 const AdminDashboard = () => {
 
@@ -129,6 +131,9 @@ const AdminDashboard = () => {
 
                         <Route path="/Admin/fees" element={<AddFees />} />
                         <Route path="/Admin/showfees" element={<ShowFees />} />
+                        <Route path="/Admin/fees/admission" element={<AdmissionFees />} />
+
+                        <Route path="/Admin/fees/exam" element={<ExamFees />} />
 
                         <Route path="/Admin/addnotice" element={<AddNotice />} />
                         <Route path="/Admin/notices" element={<ShowNotices />} />
@@ -177,6 +182,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/addparent" element={<AddParent />} />
                         <Route path="/Admin/expenses" element={<ExpenseManagement />} />
                         <Route path="/Admin/teacher-salary" element={<AddTeacherSalary />} />
+                        <Route path="/Admin/accounts" element={<AdminAccounts />} />
                         
                         <Route path="ai" element={<AiAssistant />} />
                         <Route path="/logout" element={<Logout />} />
