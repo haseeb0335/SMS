@@ -61,8 +61,8 @@ router.put('/ExamFee/:id', updateExamFee);
  router.delete('/ExamFee/:id', deleteExamFee);
 
 //  fee tracking
-route.get('/class-wise', trackerController.getClassWiseTracker);
-router.get('/stats', trackerController.getFeeStats);
+router.get('/class-wise', getClassWiseTracker);
+router.get('/stats', getFeeStats);
 
 
 // AI Route
