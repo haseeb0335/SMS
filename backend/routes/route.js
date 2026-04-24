@@ -40,6 +40,7 @@ const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../co
 const { askAI } = require('../controllers/ai-controller.js');
 
 const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee} = require('../controllers/admissionController.js');
+const { getClassWiseTracker, getFeeStats} = require('../controllers/feeTrackerControlle.js');
 // Admin
 router.post('/AdminReg', adminRegister);
 router.post('/AdminLogin', adminLogIn);
