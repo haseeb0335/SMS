@@ -1,15 +1,25 @@
 const express = require("express");
-const cors = require("cors");
 const mongoose = require("mongoose");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
 
-const Routes = require("./routes/route.js");
-const biometricRoutes = require("./routes/biometricRoutes.js");
-const parentRoutes = require("./routes/route.js");
+// ✅ Routes
+const Routes = require("../routes/route.js");
+const biometricRoutes = require("../routes/biometricRoutes.js");
+const parentRoutes = require("../routes/route.js");
 
-// ✅ GLOBAL cached connection (important for Vercel)
+// ✅ Middleware
+app.use(cors());
+app.use(express.json());
+
+// ✅ DEBUG route (VERY IMPORTANT)
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Server is working ✅" });
+});
+
+// ✅ MongoDB Cached Connection (Vercel SAFE)
 let cached = global.mongoose;
 
 if (!cached) {
@@ -17,31 +27,51 @@ if (!cached) {
 }
 
 async function connectToDatabase() {
-  if (cached.conn) return cached.conn;
+  if (cached.conn) {
+    return cached.conn;
+  }
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(process.env.MONGODB_URL, {
       bufferCommands: false,
-    }).then((mongoose) => mongoose);
+    }).then((mongoose) => {
+      console.log("MongoDB Connected ✅");
+      return mongoose;
+    }).catch((err) => {
+      console.error("MongoDB ERROR ❌", err);
+      throw err;
+    });
   }
 
   cached.conn = await cached.promise;
   return cached.conn;
 }
 
-// ✅ middleware
+// ✅ DB Middleware (SAFE)
 app.use(async (req, res, next) => {
-  await connectToDatabase();
-  next();
+  try {
+    await connectToDatabase();
+    next();
+  } catch (error) {
+    console.error("DB CONNECTION FAILED ❌", error);
+    return res.status(500).json({ error: "Database connection failed" });
+  }
 });
 
-app.use(cors());
-app.use(express.json({ limit: "10mb" }));
-
-app.use('/Parent', parentRoutes);
+// ✅ Your Routes
+app.use("/Parent", parentRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", biometricRoutes);
 app.use("/", Routes);
+
+// ✅ Global Error Logs
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
 
 module.exports = app;
 
