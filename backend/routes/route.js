@@ -39,7 +39,7 @@ const { addFees, getStudentFees,getAllFees, deleteFee, editFee } = require("../c
 const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../controllers/expense-controller.js');
 const { askAI } = require('../controllers/ai-controller.js');
 
-const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission } = require('../controllers/admissionController.js');
+const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee} = require('../controllers/admissionController.js');
 // Admin
 router.post('/AdminReg', adminRegister);
 router.post('/AdminLogin', adminLogIn);
@@ -52,6 +52,16 @@ router.post('/AdmissionFees', createAdmission);
 router.get('/Admissions', getAllAdmissions);
 router.put('/Admission/:id', updateAdmission);
 router.delete('/Admission/:id', deleteAdmission);
+
+// Exam Fees
+router.post('/ExamFees', createExamFee);
+router.get('/ExamFees', getAllExamFees);
+router.put('/ExamFee/:id', updateExamFee);
+ router.delete('/ExamFee/:id', deleteExamFee);
+
+//  fee tracking
+route.get('/tracker/class-wise', getClassWiseTracker);
+router.get('/tracker/stats', getFeeStats);
 
 
 // AI Route

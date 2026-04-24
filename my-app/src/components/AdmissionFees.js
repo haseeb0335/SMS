@@ -89,26 +89,55 @@ const AdmissionFees = () => {
         doc.save("All_Admissions.pdf");
     };
 
-    const downloadIndividualPDF = (student) => {
+   const downloadIndividualPDF = (student) => {
         const doc = new jsPDF();
+        
+        // 1. School Header
         doc.setFontSize(22);
         doc.setFont("helvetica", "bold");
-        doc.text("YOUR SCHOOL NAME", 105, 20, { align: 'center' });
+        doc.text("Allied School system", 105, 20, { align: 'center' }); //
+        
         doc.setFontSize(14);
-        doc.text("Admission Receipt", 105, 30, { align: 'center' });
+        doc.setFont("helvetica", "normal");
+        doc.text("Admission Receipt", 105, 30, { align: 'center' }); //
 
+        // 2. Receipt Table with Breakdown
         autoTable(doc, {
             startY: 40,
             body: [
-                ['Student Name', student.studentName],
-                ['Father Name', student.fatherName],
-                ['Class', student.className],
-                ['Total Net Paid', `RS ${Number(student.feeAmount) - Number(student.discount || 0) + Number(student.annualFund || 0)}`]
+                ['Student Name', student.studentName], //
+                ['Father Name', student.fatherName], //
+                ['Class', student.className], //
+                ['------------------', '------------------'],
+                ['Admission Fee', `RS ${student.feeAmount}`],
+                ['Annual Fund', `RS ${student.annualFund || 0}`],
+                ['Discount', `- RS ${student.discount || 0}`],
+                ['------------------', '------------------'],
+                ['Total Net Paid', `RS ${Number(student.feeAmount) - Number(student.discount || 0) + Number(student.annualFund || 0)}`] //
             ],
             theme: 'striped',
+            styles: { fontSize: 11 },
+            columnStyles: {
+                0: { fontStyle: 'bold', width: 50 },
+            },
             headStyles: { fillColor: [30, 41, 59] }
         });
-        doc.save(`${student.studentName}_Receipt.pdf`);
+
+        // 3. Paid Stamp
+        const finalY = doc.lastAutoTable.finalY + 20;
+        doc.setDrawColor(220, 38, 38); // Red color
+        doc.setLineWidth(1.5);
+        doc.rect(140, finalY, 40, 15); // Draw stamp box
+        
+        doc.setTextColor(220, 38, 38);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("PAID", 160, finalY + 10, { align: 'center' });
+        
+        // Reset text color for safety
+        doc.setTextColor(0, 0, 0);
+
+        doc.save(`${student.studentName}_Receipt.pdf`); //
     };
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -130,16 +159,14 @@ const AdmissionFees = () => {
 
         try {
             if (editIndex !== null) {
-                // UPDATE: PUT /api/Admission/:id
                 const id = records[editIndex]._id;
                 await axios.put(`${BASE_URL}/Admission/${id}`, formData);
                 setEditIndex(null);
             } else {
-                // CREATE: POST /api/AdmissionFees
                 await axios.post(`${BASE_URL}/AdmissionFees`, formData);
                 sendWhatsAppMessage(formData);
             }
-            fetchAdmissions(); // Refresh list from DB
+            fetchAdmissions();
             setFormData({ studentName: '', fatherName: '', dob: '', whatsapp: '', className: '', feeAmount: '', discount: '', securityDeposit: '', annualFund: '' });
         } catch (err) {
             console.error(err);
@@ -150,7 +177,6 @@ const AdmissionFees = () => {
     const handleDelete = async (row) => {
         if (window.confirm("Are you sure you want to delete this record?")) {
             try {
-                // DELETE: /api/Admission/:id
                 await axios.delete(`${BASE_URL}/Admission/${row._id}`);
                 fetchAdmissions();
             } catch (err) {
@@ -160,7 +186,8 @@ const AdmissionFees = () => {
     };
 
     const groupedRecords = records.reduce((acc, record) => {
-        const normalizedClass = record.className.trim().toLowerCase();
+        // Normalizing class names to fix "class 1" vs "class1"
+        const normalizedClass = record.className.trim().toLowerCase().replace(/\s+/g, ' ');
         if (!acc[normalizedClass]) acc[normalizedClass] = [];
         acc[normalizedClass].push(record);
         return acc;
@@ -254,8 +281,11 @@ const AdmissionFees = () => {
                                                 <Typography variant="caption" color="textSecondary">{row.fatherName}</Typography>
                                             </TableCell>
                                             <TableCell>
+                                                <Typography variant="caption" color="textSecondary" sx={{ fontWeight: '700', display: 'block' }}>
+                                                    Fee: RS {row.feeAmount} | Disc: RS {row.discount || 0} | Annual: RS {row.annualFund || 0}
+                                                </Typography>
                                                 <Typography variant="body2" sx={{ fontWeight: '700', color: '#10b981' }}>
-                                                    Net: RS {Number(row.feeAmount) - Number(row.discount || 0) + Number(row.annualFund || 0)}
+                                                    Net Paid: RS {Number(row.feeAmount) - Number(row.discount || 0) + Number(row.annualFund || 0)}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell align="center">

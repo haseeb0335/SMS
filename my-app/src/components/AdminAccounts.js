@@ -44,7 +44,7 @@ const AdminAccounts = () => {
                         <ListItemText primary="Assign fee structure per class" />
                     </ListItemButton>
                     <Divider />
-                    <ListItemButton component={Link} to="/Admin/fees/tracking">
+                    <ListItemButton component={Link} to="/fee-tracker">
                         <ListItemText primary="Track paid/unpaid students" />
                     </ListItemButton>
                     <Divider />
