@@ -8,16 +8,10 @@ const app = express();
 // ✅ Routes
 const Routes = require("../routes/route.js");
 const biometricRoutes = require("../routes/biometricRoutes.js");
-const parentRoutes = require("../routes/route.js");
 
 // ✅ Middleware
 app.use(cors());
 app.use(express.json());
-
-// ✅ DEBUG route (VERY IMPORTANT)
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Server is working ✅" });
-});
 
 // ✅ MongoDB Cached Connection (Vercel SAFE)
 let cached = global.mongoose;
@@ -27,17 +21,17 @@ if (!cached) {
 }
 
 async function connectToDatabase() {
-  if (cached.conn) {
-    return cached.conn;
-  }
+  if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(process.env.MONGODB_URL, {
       bufferCommands: false,
-    }).then((mongoose) => {
+    })
+    .then((mongoose) => {
       console.log("MongoDB Connected ✅");
       return mongoose;
-    }).catch((err) => {
+    })
+    .catch((err) => {
       console.error("MongoDB ERROR ❌", err);
       throw err;
     });
@@ -47,7 +41,7 @@ async function connectToDatabase() {
   return cached.conn;
 }
 
-// ✅ DB Middleware (SAFE)
+// ✅ DB Middleware (VERY IMPORTANT)
 app.use(async (req, res, next) => {
   try {
     await connectToDatabase();
@@ -58,9 +52,15 @@ app.use(async (req, res, next) => {
   }
 });
 
-// ✅ Your Routes
-app.use("/Parent", parentRoutes);
+// ✅ DEBUG route (after DB)
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Server is working ✅" });
+});
+
+// ❗ Optional (may not work on Vercel)
 app.use("/uploads", express.static("uploads"));
+
+// ✅ Your Routes
 app.use("/api", biometricRoutes);
 app.use("/", Routes);
 
@@ -74,7 +74,6 @@ process.on("uncaughtException", (err) => {
 });
 
 module.exports = app;
-
 
 // const express = require("express");
 // const cors = require("cors");
