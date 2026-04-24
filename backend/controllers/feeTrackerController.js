@@ -1,37 +1,36 @@
-const Admission = require('../models/Admission'); // Your student records
-const Fee = require('../models/Fee');             // Your paid fee records
+const Admission = require('../models/Admission');
+const Fee = require('../models/Fee');
 
 /**
  * GET Class-wise Fee Status
- * This returns a list of all students grouped by class, 
- * marking each as "Paid" or "Unpaid" for the current month.
  */
 const getClassWiseTracker = async (req, res) => {
     try {
-        // 1. Fetch all students and all payment records
         const [students, paidRecords] = await Promise.all([
-            Admission.find({}).select('studentName fatherName className'),
-            Fee.find({}).select('studentName className date')
+            Admission.find({}).select('_id studentName fatherName className'),
+            Fee.find({}).select('studentName className')
         ]);
 
-        // 2. Cross-reference students with payments
+        // Create a Set of paid students (safe + fast)
+        const paidSet = new Set(
+            paidRecords.map(record => 
+                `${record.studentName?.trim().toLowerCase()}-${record.className}`
+            )
+        );
+
         const trackerData = students.map(student => {
-            // Check if there is a payment record for this student in their specific class
-            const isPaid = paidRecords.some(record => 
-                record.studentName.toLowerCase() === student.studentName.toLowerCase() &&
-                record.className === student.className
-            );
+            const key = `${student.studentName?.trim().toLowerCase()}-${student.className}`;
 
             return {
                 _id: student._id,
                 studentName: student.studentName,
                 fatherName: student.fatherName,
                 className: student.className,
-                status: isPaid ? 'Paid' : 'Unpaid'
+                status: paidSet.has(key) ? 'Paid' : 'Unpaid'
             };
         });
 
-        // 3. Optional: Group by class on the backend to save frontend processing
+        // Group by class
         const groupedByClass = trackerData.reduce((acc, curr) => {
             if (!acc[curr.className]) acc[curr.className] = [];
             acc[curr.className].push(curr);
@@ -39,34 +38,46 @@ const getClassWiseTracker = async (req, res) => {
         }, {});
 
         res.status(200).json(groupedByClass);
+
     } catch (error) {
         console.error("Tracker Error:", error);
-        res.status(500).json({ 
-            message: "Failed to generate fee tracking data", 
-            error: error.message 
+        res.status(500).json({
+            message: "Failed to generate fee tracking data",
+            error: error.message
         });
     }
 };
 
+
 /**
  * GET Monthly Summary
- * Provides a high-level overview of collection progress
  */
 const getFeeStats = async (req, res) => {
     try {
         const totalStudents = await Admission.countDocuments();
-        const paidStudents = await Fee.countDocuments();
-        
+
+        // Get unique students who paid
+        const paidStudentsData = await Fee.distinct('studentName');
+        const paidStudents = paidStudentsData.length;
+
         const stats = {
             total: totalStudents,
             paid: paidStudents,
             unpaid: totalStudents - paidStudents,
-            percentage: totalStudents > 0 ? ((paidStudents / totalStudents) * 100).toFixed(2) : 0
+            percentage:
+                totalStudents > 0
+                    ? ((paidStudents / totalStudents) * 100).toFixed(2)
+                    : 0
         };
 
         res.status(200).json(stats);
+
     } catch (error) {
-        res.status(500).json({ message: "Error fetching statistics", error });
+        console.error("Stats Error:", error);
+        res.status(500).json({
+            message: "Error fetching statistics",
+            error: error.message
+        });
     }
 };
 
