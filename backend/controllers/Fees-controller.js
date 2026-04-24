@@ -268,5 +268,5 @@ module.exports = {
     deleteFee,
     editFee,
     getClassWiseTracker,
-    getFeeStats
+    getFeeStats,
 };
