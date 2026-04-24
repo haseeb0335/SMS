@@ -39,8 +39,8 @@ const { addFees, getStudentFees,getAllFees, deleteFee, editFee } = require("../c
 const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../controllers/expense-controller.js');
 const { askAI } = require('../controllers/ai-controller.js');
 
-const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee} = require('../controllers/admissionController.js');
-const { getClassWiseTracker, getFeeStats} = require('../controllers/feeTrackerController.js');
+const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee, getClassWiseTracker,  getFeeStats} = require('../controllers/admissionController.js');
+
 // Admin
 router.post('/AdminReg', adminRegister);
 router.post('/AdminLogin', adminLogIn);
