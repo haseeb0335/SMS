@@ -35,7 +35,7 @@ const {
     removeStudentAttendance } = require('../controllers/student_controller.js');
 const { subjectCreate, classSubjects, deleteSubjectsByClass, getSubjectDetail, deleteSubject, freeSubjectList, allSubjects, deleteSubjects } = require('../controllers/subject-controller.js');
 const { teacherRegister, teacherLogIn, getTeachers, getTeachersByClass, getTeacherAttendance,  getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubject, teacherAttendance,updateTeacher,deleteTeacherAttendance,removeTeacherAttendance, } = require('../controllers/teacher-controller.js');
-const { addFees, getStudentFees,getAllFees, deleteFee, editFee } = require("../controllers/Fees-controller.js");
+const { addFees, getStudentFees,getAllFees, deleteFee, editFee, getClassWiseTracker,  getFeeStats, } = require("../controllers/Fees-controller.js");
 const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../controllers/expense-controller.js');
 const { askAI } = require('../controllers/ai-controller.js');
 
@@ -61,8 +61,8 @@ router.put('/ExamFee/:id', updateExamFee);
  router.delete('/ExamFee/:id', deleteExamFee);
 
 //  fee tracking
-// router.get('/ClassWiseTracker/:id', getClassWiseTracker);
-// router.get('/FeeStats', getFeeStats);
+router.get('/ClassWiseTracker/:id', getClassWiseTracker);
+router.get('/FeeStats', getFeeStats);
 
 
 // AI Route
