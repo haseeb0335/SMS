@@ -21,24 +21,31 @@ if (!cached) {
 }
 
 async function connectToDatabase() {
-  if (cached.conn) return cached.conn;
+  try {
+    console.log("Connecting to MongoDB...");
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGODB_URL, {
-      bufferCommands: false,
-    })
-    .then((mongoose) => {
-      console.log("MongoDB Connected ✅");
-      return mongoose;
-    })
-    .catch((err) => {
-      console.error("MongoDB ERROR ❌", err);
-      throw err;
-    });
+    if (cached.conn) {
+      console.log("Using cached DB");
+      return cached.conn;
+    }
+
+    if (!cached.promise) {
+      cached.promise = mongoose.connect(process.env.MONGODB_URL, {
+        bufferCommands: false,
+      })
+      .then((mongoose) => {
+        console.log("MongoDB Connected ✅");
+        return mongoose;
+      });
+    }
+
+    cached.conn = await cached.promise;
+    return cached.conn;
+
+  } catch (error) {
+    console.error("MongoDB ERROR ❌:", error);
+    throw error;
   }
-
-  cached.conn = await cached.promise;
-  return cached.conn;
 }
 
 // ✅ DB Middleware (VERY IMPORTANT)
