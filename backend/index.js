@@ -1,68 +1,116 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+require("dotenv").config();
 
 const app = express();
+
 const Routes = require("./routes/route.js");
 const biometricRoutes = require("./routes/biometricRoutes.js");
-// const PORT = process.env.PORT || 5000;
 const parentRoutes = require("./routes/route.js");
 
-dotenv.config();
+// ✅ GLOBAL cached connection (important for Vercel)
+let cached = global.mongoose;
 
-let isConnected = false;
-async function connectToDatabase() {
-    try {
-        await mongoose.connect(process.env.MONGODB_URL, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        isConnected = true;
-        console.log("Connected to MongoDB");
-    } catch (error) {
-        console.error("NOT CONNECTED TO NETWORK", error);
-    }
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
-// add middleware to check database connection before processing requests
-app.use((req, res, next) => {
-    if (!isConnected) {
-        connectToDatabase()
-            .then(() => {
-                next();
-            })
-            .catch((err) => {
-                res.status(500).json({ error: "Database connection failed" });
-            });
-    } else {
-        next();
-    }
+async function connectToDatabase() {
+  if (cached.conn) return cached.conn;
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(process.env.MONGODB_URL, {
+      bufferCommands: false,
+    }).then((mongoose) => mongoose);
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
+// ✅ middleware
+app.use(async (req, res, next) => {
+  await connectToDatabase();
+  next();
 });
 
-
-connectToDatabase();
-
-
-app.use(express.json({ limit: "10mb" }));
 app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+
 app.use('/Parent', parentRoutes);
 app.use("/uploads", express.static("uploads"));
-app.use("/api", biometricRoutes); // Biometric routes
-// All routes
+app.use("/api", biometricRoutes);
 app.use("/", Routes);
 
-mongoose
-  .connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log("NOT CONNECTED TO NETWORK", err));
+module.exports = app;
 
-// app.listen(PORT, () => {
-  
-//   console.log(`Server started at port no. ${PORT}`);
+
+// const express = require("express");
+// const cors = require("cors");
+// const mongoose = require("mongoose");
+// const dotenv = require("dotenv");
+
+// const app = express();
+// const Routes = require("./routes/route.js");
+// const biometricRoutes = require("./routes/biometricRoutes.js");
+// // const PORT = process.env.PORT || 5000;
+// const parentRoutes = require("./routes/route.js");
+
+// dotenv.config();
+
+// let isConnected = false;
+// async function connectToDatabase() {
+//     try {
+//         await mongoose.connect(process.env.MONGODB_URL, {
+//             useNewUrlParser: true,
+//             useUnifiedTopology: true
+//         });
+//         isConnected = true;
+//         console.log("Connected to MongoDB");
+//     } catch (error) {
+//         console.error("NOT CONNECTED TO NETWORK", error);
+//     }
+// }
+
+// // add middleware to check database connection before processing requests
+// app.use((req, res, next) => {
+//     if (!isConnected) {
+//         connectToDatabase()
+//             .then(() => {
+//                 next();
+//             })
+//             .catch((err) => {
+//                 res.status(500).json({ error: "Database connection failed" });
+//             });
+//     } else {
+//         next();
+//     }
 // });
 
-module.exports = app; // Export the app for testing or serverless deployment
+
+// connectToDatabase();
+
+
+// app.use(express.json({ limit: "10mb" }));
+// app.use(cors());
+// app.use('/Parent', parentRoutes);
+// app.use("/uploads", express.static("uploads"));
+// app.use("/api", biometricRoutes); // Biometric routes
+// // All routes
+// app.use("/", Routes);
+
+// mongoose
+//   .connect(process.env.MONGODB_URL, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true
+//   })
+//   .then(() => console.log("Connected to MongoDB"))
+//   .catch((err) => console.log("NOT CONNECTED TO NETWORK", err));
+
+// // app.listen(PORT, () => {
+  
+// //   console.log(`Server started at port no. ${PORT}`);
+// // });
+
+// module.exports = app; // Export the app for testing or serverless deployment

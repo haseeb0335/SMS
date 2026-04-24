@@ -52,7 +52,7 @@ import AdminAccounts from '../../components/AdminAccounts'; // New component for
 import AccountMenu from '../../components/AccountMenu';
 import ExamFees from '../../components/ExamFees'; // New component for exam fee structure management
 import AdmissionFees from '../../components/AdmissionFees';
-import ClassFeeTracker from './FeesRelated/ClassFeeTracker'; // New component for tracking fees by class
+ 
 
 const AdminDashboard = () => {
 
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/fees/admission" element={<AdmissionFees />} />
 
                         <Route path="/Admin/fees/exam" element={<ExamFees />} />
-                        <Route path="/fee-tracker" element={<ClassFeeTracker />} />
+                       
 
                         <Route path="/Admin/addnotice" element={<AddNotice />} />
                         <Route path="/Admin/notices" element={<ShowNotices />} />
