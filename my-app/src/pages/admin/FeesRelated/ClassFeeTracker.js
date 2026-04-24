@@ -21,8 +21,8 @@ const ClassFeeTracker = () => {
             setLoading(true);
             // Fetch all students (Admissions) and all paid records (Fees)
             const [studentsRes, feesRes] = await Promise.all([
-                axios.get(`${BASE_URL}/tracker/class-wise`), 
-                axios.get(`${BASE_URL}/tracker/stats`)
+                axios.get(`${BASE_URL}/class-wise`), 
+                axios.get(`${BASE_URL}/stats`)
             ]);
 
             const allStudents = Array.isArray(studentsRes.data) ? studentsRes.data : [];
