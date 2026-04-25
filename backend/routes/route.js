@@ -42,7 +42,7 @@ const { askAI } = require('../controllers/ai-controller.js');
 const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee, } = require('../controllers/admissionController.js');
 const { 
     collectAnnualFund, 
-    getAnnualFundRecords 
+    getAnnualFundRecords, editAnnualFund
 } = require('../controllers/annualFundController');
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -91,6 +91,7 @@ router.put("/EditFee/:id", editFee);
 // Annual fund Routes
 router.post('/CollectAnnualFund', collectAnnualFund);
 router.get('/AnnualFundRecords', getAnnualFundRecords);
+router.put('/EditAnnualFund/:id', editAnnualFund); // Reusing editFee for simplicity, can create a separate controller if needed
 
 
 // router.get("/Sclasses", getSclasses);

@@ -62,5 +62,38 @@ const getAnnualFundRecords = async (req, res) => {
         res.status(500).json({ message: "Error fetching fund records" });
     }
 };
+// ✅ EDIT ANNUAL FUND RECORD
+const editAnnualFund = async (req, res) => {
+    try {
+        const { id } = req.params; // This is the unique Fee ID (_id)
+        const { amount, fatherName, collectorName, feeMonth, date } = req.body;
 
-module.exports = { collectAnnualFund, getAnnualFundRecords };
+        // Find the student who contains this specific fee ID
+        const student = await Student.findOne({ "fees._id": id });
+
+        if (!student) {
+            return res.status(404).json({ message: "Record not found" });
+        }
+
+        // Find the specific fee object within the array
+        const fee = student.fees.id(id);
+        
+        if (fee) {
+            fee.amount = Number(amount) || fee.amount;
+            fee.fatherName = fatherName || fee.fatherName;
+            fee.collectorName = collectorName || fee.collectorName;
+            fee.feeMonth = feeMonth || fee.feeMonth;
+            fee.date = date || fee.date;
+            
+            // Re-calculate totalDues if necessary for your logic
+            fee.totalDues = (fee.previousDues || 0) - fee.amount;
+        }
+
+        await student.save();
+        res.status(200).json({ message: "Annual Fund record updated successfully" });
+    } catch (error) {
+        console.error("Edit Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+module.exports = { collectAnnualFund, getAnnualFundRecords, editAnnualFund };
