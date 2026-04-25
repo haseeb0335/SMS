@@ -49,15 +49,15 @@ async function connectToDatabase() {
 }
 
 // ✅ DB Middleware (VERY IMPORTANT)
-// app.use(async (req, res, next) => {
-//   try {
-//     await connectToDatabase();
-//     next();
-//   } catch (error) {
-//     console.error("DB CONNECTION FAILED ❌", error);
-//     return res.status(500).json({ error: "Database connection failed" });
-//   }
-// });
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (error) {
+    console.error("DB CONNECTION FAILED ❌", error);
+    return res.status(500).json({ error: "Database connection failed" });
+  }
+});
 
 // ✅ DEBUG route (after DB)
 app.get("/", (req, res) => {
