@@ -20,9 +20,10 @@ import SchoolIcon from '@mui/icons-material/School';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'; // New Icon
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
-// const BASE_URL = "http://localhost:5000";
 const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const ShowFees = () => {
@@ -30,13 +31,22 @@ const ShowFees = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     
     const [feesList, setFeesList] = useState([]);
+    const [studentsList, setStudentsList] = useState([]); // Tracking all students
     const [loading, setLoading] = useState(true);
 
     const fetchFees = async () => {
         try {
             setLoading(true);
             const res = await axios.get(`${BASE_URL}/AllFees`);
-            setFeesList(Array.isArray(res.data) ? res.data : []);
+            
+            // Backend now returns an object { allFees, allStudents }
+            if (res.data.allFees) {
+                setFeesList(res.data.allFees);
+                setStudentsList(res.data.allStudents);
+            } else {
+                // Fallback for old data structure
+                setFeesList(Array.isArray(res.data) ? res.data : []);
+            }
         } catch (err) {
             console.error("Fetch Fees Error:", err);
         } finally {
@@ -48,7 +58,6 @@ const ShowFees = () => {
         fetchFees();
     }, []);
 
-    // POS Receipt Logic (Opens a new window for printing)
     const downloadPOSReceipt = (className, month, fees) => {
         const total = fees.reduce((sum, f) => sum + Number(f.amount), 0);
         const receiptWindow = window.open("", "_blank", "width=400,height=600");
@@ -88,7 +97,6 @@ const ShowFees = () => {
         receiptWindow.print();
     };
 
-    // PDF Export Logic
     const downloadPDF = (className, month, fees) => {
         const doc = new jsPDF();
         const total = fees.reduce((sum, f) => sum + Number(f.amount), 0);
@@ -175,7 +183,7 @@ const ShowFees = () => {
                 <Button variant="outlined" startIcon={<DownloadIcon />} onClick={exportToExcel}>Export Excel</Button>
             </Stack>
 
-            <Paper sx={{ p: 3, mb: 4, borderRadius: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Paper sx={{ p: 3, mb: 4, borderRadius: 4, display: 'flex', alignItems: 'center', gap: 2, bgcolor: '#ffffff' }}>
                 <AccountBalanceWalletIcon color="primary" fontSize="large" />
                 <Box>
                     <Typography variant="caption" color="textSecondary">GRAND TOTAL COLLECTION</Typography>
@@ -184,74 +192,84 @@ const ShowFees = () => {
             </Paper>
 
             {Object.entries(groupedData).map(([className, months], cIdx) => (
-                <Accordion key={cIdx} sx={{ mb: 2, borderRadius: '12px !important', overflow: 'hidden' }}>
+                <Accordion key={cIdx} sx={{ mb: 2, borderRadius: '12px !important', overflow: 'hidden', boxShadow: 'none', border: '1px solid #e2e8f0' }}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <SchoolIcon sx={{ mr: 2 }} color="action" />
-                        <Typography fontWeight={700}>{className}</Typography>
+                        <SchoolIcon sx={{ mr: 2 }} color="primary" />
+                        <Typography fontWeight={700} variant="h6">{className}</Typography>
                     </AccordionSummary>
                     <AccordionDetails sx={{ bgcolor: '#fafafa' }}>
                         {Object.entries(months).map(([month, fees], mIdx) => {
                             const monthlyTotal = fees.reduce((sum, f) => sum + Number(f.amount), 0);
+                            
+                            // FILTERING LOGIC FOR UNPAID
+                            const studentsInThisClass = studentsList.filter(s => s.className === className);
+                            const unpaidStudents = studentsInThisClass.filter(s => 
+                                !fees.some(paidFee => paidFee.studentId === s._id)
+                            );
+
                             return (
-                                <Accordion key={mIdx} variant="outlined" sx={{ mb: 1 }}>
+                                <Accordion key={mIdx} variant="outlined" sx={{ mb: 1, borderRadius: '8px !important' }}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                         <Stack direction="row" justifyContent="space-between" width="100%" pr={2}>
                                             <Stack direction="row" spacing={1} alignItems="center">
-                                                <CalendarMonthIcon fontSize="small" />
-                                                <Typography variant="subtitle2">{month}</Typography>
+                                                <CalendarMonthIcon fontSize="small" color="action" />
+                                                <Typography variant="subtitle2" fontWeight={600}>{month}</Typography>
+                                                <Chip size="small" label={`${fees.length} Paid`} color="success" sx={{ height: 20, fontSize: '0.65rem' }} />
+                                                {unpaidStudents.length > 0 && (
+                                                    <Chip size="small" label={`${unpaidStudents.length} Unpaid`} color="error" sx={{ height: 20, fontSize: '0.65rem' }} />
+                                                )}
                                             </Stack>
                                             <Typography variant="subtitle2" fontWeight={700} color="success.main">Rs. {monthlyTotal}</Typography>
                                         </Stack>
                                     </AccordionSummary>
                                     <AccordionDetails>
-                                        {/* Download Buttons Section */}
                                         <Stack direction="row" spacing={2} justifyContent="flex-end" mb={2}>
-                                            <Button 
-                                                size="small" variant="contained" color="error"
-                                                startIcon={<PictureAsPdfIcon />}
-                                                onClick={() => downloadPDF(className, month, fees)}
-                                            >PDF</Button>
-                                            <Button 
-                                                size="small" variant="contained" color="secondary"
-                                                startIcon={<ReceiptLongIcon />}
-                                                onClick={() => downloadPOSReceipt(className, month, fees)}
-                                            >POS Receipt</Button>
+                                            <Button size="small" variant="contained" color="error" startIcon={<PictureAsPdfIcon />} onClick={() => downloadPDF(className, month, fees)}>PDF</Button>
+                                            <Button size="small" variant="contained" color="secondary" sx={{ bgcolor: '#6b7280' }} startIcon={<ReceiptLongIcon />} onClick={() => downloadPOSReceipt(className, month, fees)}>POS Receipt</Button>
                                         </Stack>
 
-                                        {/* Table/Cards Rendering ... (Remaining code kept same) */}
-                                        {isMobile ? (
-                                            fees.map(f => (
-                                                <Card key={f._id} sx={{ mb: 1 }}>
-                                                    <CardContent>
-                                                        <Typography variant="subtitle1" fontWeight={700}>{f.studentName}</Typography>
-                                                        <Typography color="success.main" fontWeight={800}>Rs. {f.amount}</Typography>
-                                                        <Stack direction="row" justifyContent="flex-end">
-                                                            <IconButton onClick={() => handleEditFee(f)}><EditIcon fontSize="small" /></IconButton>
-                                                            <IconButton onClick={() => handleDeleteFee(f._id)}><DeleteIcon fontSize="small" color="error"/></IconButton>
-                                                        </Stack>
-                                                    </CardContent>
-                                                </Card>
-                                            ))
-                                        ) : (
-                                            <TableContainer component={Paper} elevation={0}>
-                                                <Table size="small">
-                                                    <TableHead><TableRow><TableCell>Student</TableCell><TableCell>Amount</TableCell><TableCell>Date</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
-                                                    <TableBody>
-                                                        {fees.map(f => (
-                                                            <TableRow key={f._id}>
-                                                                <TableCell>{f.studentName}</TableCell>
-                                                                <TableCell sx={{ fontWeight: 700 }}>Rs. {f.amount}</TableCell>
-                                                                <TableCell>{new Date(f.date).toLocaleDateString()}</TableCell>
-                                                                <TableCell align="right">
-                                                                    <IconButton onClick={() => handleEditFee(f)}><EditIcon fontSize="small" /></IconButton>
-                                                                    <IconButton onClick={() => handleDeleteFee(f._id)}><DeleteIcon fontSize="small" color="error"/></IconButton>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                        )}
+                                        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9' }}>
+                                            <Table size="small">
+                                                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Student</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                                                        <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {/* PAID RECORDS */}
+                                                    {fees.map(f => (
+                                                        <TableRow key={f._id} hover>
+                                                            <TableCell>{f.studentName}</TableCell>
+                                                            <TableCell>
+                                                                <Chip icon={<CheckCircleIcon />} label="Paid" color="success" size="small" variant="outlined" />
+                                                            </TableCell>
+                                                            <TableCell sx={{ fontWeight: 700 }}>Rs. {f.amount}</TableCell>
+                                                            <TableCell align="right">
+                                                                <IconButton size="small" onClick={() => handleEditFee(f)}><EditIcon fontSize="small" /></IconButton>
+                                                                <IconButton size="small" onClick={() => handleDeleteFee(f._id)}><DeleteIcon fontSize="small" color="error"/></IconButton>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+
+                                                    {/* UNPAID RECORDS */}
+                                                    {unpaidStudents.map(s => (
+                                                        <TableRow key={s._id} sx={{ bgcolor: '#fff5f5' }}>
+                                                            <TableCell>{s.name}</TableCell>
+                                                            <TableCell>
+                                                                <Chip icon={<CancelIcon />} label="Unpaid" color="error" size="small" />
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'error.main', fontStyle: 'italic' }}>Pending</TableCell>
+                                                            <TableCell align="right">
+                                                                <Typography variant="caption" color="textSecondary">N/A</Typography>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
                                     </AccordionDetails>
                                 </Accordion>
                             );

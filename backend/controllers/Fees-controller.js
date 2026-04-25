@@ -66,25 +66,15 @@ const newFee = {
 const getAllFees = async (req, res) => {
     try {
         const students = await Student.find().populate("sclassName");
-
         let allFees = [];
 
         students.forEach(student => {
             if (student.fees && Array.isArray(student.fees)) {
                 student.fees.forEach(fee => {
-
-                    // ✅ FIX: ensure all fields always exist
                     const safeFather = fee.fatherName || student.fatherName || "-";
-                    const safeMonth = fee.feeMonth || "-";
-                    const safeReceivedBy = fee.receivedBy || "-";
-
-                    // ✅ FIX: calculate balance if missing
                     const safePrevious = fee.previousDues || 0;
                     const safeAmount = fee.amount || 0;
-                    const safeTotalDues = 
-                        typeof fee.totalDues === "number"
-                        ? fee.totalDues
-                        : (safePrevious - safeAmount);
+                    const safeTotalDues = typeof fee.totalDues === "number" ? fee.totalDues : (safePrevious - safeAmount);
 
                     allFees.push({
                         _id: fee._id,
@@ -93,19 +83,25 @@ const getAllFees = async (req, res) => {
                         date: fee.date,
                         studentName: student.name || "Unknown",
                         className: student.sclassName?.sclassName || "Class Not Assigned",
-
-                        // ✅ Always filled now
                         fatherName: safeFather,
-                        feeMonth: safeMonth,
+                        feeMonth: fee.feeMonth || "-",
                         previousDues: safePrevious,
                         totalDues: safeTotalDues,
-                        receivedBy: safeReceivedBy
+                        receivedBy: fee.receivedBy || "-"
                     });
                 });
             }
         });
 
-        res.status(200).json(allFees);
+        // ✅ Updated: Send both lists so frontend can track Unpaid students
+        res.status(200).json({
+            allFees,
+            allStudents: students.map(s => ({
+                _id: s._id,
+                name: s.name,
+                className: s.sclassName?.sclassName || "No Class"
+            }))
+        });
 
     } catch (error) {
         console.error("Error in getAllFees:", error.message);
