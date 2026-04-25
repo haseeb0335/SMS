@@ -35,7 +35,7 @@ const {
     removeStudentAttendance } = require('../controllers/student_controller.js');
 const { subjectCreate, classSubjects, deleteSubjectsByClass, getSubjectDetail, deleteSubject, freeSubjectList, allSubjects, deleteSubjects } = require('../controllers/subject-controller.js');
 const { teacherRegister, teacherLogIn, getTeachers, getTeachersByClass, getTeacherAttendance,  getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubject, teacherAttendance,updateTeacher,deleteTeacherAttendance,removeTeacherAttendance, } = require('../controllers/teacher-controller.js');
-const { addFees, getStudentFees,getAllFees, deleteFee, editFee, getStudents } = require("../controllers/Fees-controller.js");
+const { addFees, getStudentFees,getAllFees, deleteFee, editFee } = require("../controllers/Fees-controller.js");
 const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../controllers/expense-controller.js');
 const { askAI } = require('../controllers/ai-controller.js');
 
@@ -83,7 +83,7 @@ router.get("/StudentFees/:id", getStudentFees);
 router.get("/AllFees", getAllFees); 
 router.put("/DeleteFee/:id", deleteFee);
 router.put("/EditFee/:id", editFee);
-router.get("/Students", getStudents);
+
 
 // router.get("/Sclasses", getSclasses);
 

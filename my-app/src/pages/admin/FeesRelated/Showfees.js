@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { 
     IconButton, Button, Typography, Paper, Table, TableBody, 
     TableCell, TableContainer, TableHead, TableRow, Box, 
     CircularProgress, Accordion, AccordionSummary, AccordionDetails,
-    Stack, Card, CardContent, useTheme, useMediaQuery, Chip, Divider
+    Stack, Card, CardContent, Divider, useTheme, useMediaQuery, Chip
 } from "@mui/material";
 
 // Icons
@@ -19,8 +20,9 @@ import SchoolIcon from '@mui/icons-material/School';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'; // New Icon
 
+// const BASE_URL = "http://localhost:5000";
 const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const ShowFees = () => {
@@ -28,45 +30,25 @@ const ShowFees = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     
     const [feesList, setFeesList] = useState([]);
-    const [students, setStudents] = useState([]); // Track total students
     const [loading, setLoading] = useState(true);
 
-    const fetchData = async () => {
+    const fetchFees = async () => {
         try {
             setLoading(true);
-            const [feesRes, studentsRes] = await Promise.all([
-                axios.get(`${BASE_URL}/AllFees`),
-                axios.get(`${BASE_URL}/Students`) // Assuming this endpoint exists
-            ]);
-            setFeesList(Array.isArray(feesRes.data) ? feesRes.data : []);
-            setStudents(Array.isArray(studentsRes.data) ? studentsRes.data : []);
+            const res = await axios.get(`${BASE_URL}/AllFees`);
+            setFeesList(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
-            console.error("Fetch Data Error:", err);
+            console.error("Fetch Fees Error:", err);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
+        fetchFees();
     }, []);
 
-    // Helper to get status
-    const getClassMonthlyStatus = (className, monthFees) => {
-        const classStudents = students.filter(s => s.sclassName === className);
-        return classStudents.map(student => {
-            const feeRecord = monthFees.find(f => f.studentName === student.name);
-            return {
-                ...student,
-                paid: !!feeRecord,
-                amount: feeRecord ? feeRecord.amount : 0,
-                feeId: feeRecord ? feeRecord._id : null,
-                date: feeRecord ? feeRecord.date : null
-            };
-        });
-    };
-
-    // POS Receipt Logic
+    // POS Receipt Logic (Opens a new window for printing)
     const downloadPOSReceipt = (className, month, fees) => {
         const total = fees.reduce((sum, f) => sum + Number(f.amount), 0);
         const receiptWindow = window.open("", "_blank", "width=400,height=600");
@@ -119,13 +101,14 @@ const ShowFees = () => {
         doc.setTextColor(100);
         doc.text(`Class: ${className}`, 14, 30);
         doc.text(`Month: ${month}`, 14, 37);
+        doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, 44);
 
-        const tableColumn = ["#", "Student Name", "Status", "Amount (PKR)"];
+        const tableColumn = ["#", "Student Name", "Date", "Amount (PKR)"];
         const tableRows = fees.map((f, index) => [
             index + 1,
             f.studentName,
-            f.paid ? "PAID" : "UNPAID",
-            f.amount ? `Rs. ${f.amount}` : "-"
+            new Date(f.date).toLocaleDateString(),
+            `Rs. ${f.amount}`
         ]);
 
         autoTable(doc, {
@@ -134,10 +117,11 @@ const ShowFees = () => {
             startY: 50,
             theme: 'striped',
             headStyles: { fillColor: [25, 118, 210] },
-            foot: [['', '', 'Total Collected:', `Rs. ${total}`]],
+            foot: [['', '', 'Total Collection:', `Rs. ${total}`]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontWeight: 'bold' }
         });
 
-        doc.save(`Fee_Report_${className}_${month}.pdf`);
+        doc.save(`Fee_Report_${className}_${month.replace(' ', '_')}.pdf`);
     };
 
     const handleDeleteFee = async (feeId) => {
@@ -148,12 +132,12 @@ const ShowFees = () => {
         } catch (err) { console.log("Delete Error:", err); }
     };
 
-    const handleEditFee = async (feeId, currentAmount) => {
-        const newAmount = prompt("Enter new amount", currentAmount);
+    const handleEditFee = async (fee) => {
+        const newAmount = prompt("Enter new amount", fee.amount);
         if (!newAmount || isNaN(newAmount)) return;
         try {
-            await axios.put(`${BASE_URL}/EditFee/${feeId}`, { amount: Number(newAmount) });
-            setFeesList((prev) => prev.map((f) => f._id === feeId ? { ...f, amount: Number(newAmount) } : f));
+            await axios.put(`${BASE_URL}/EditFee/${fee._id}`, { amount: Number(newAmount) });
+            setFeesList((prev) => prev.map((f) => f._id === fee._id ? { ...f, amount: Number(newAmount) } : f));
         } catch (err) { console.log("Edit Error:", err); }
     };
 
@@ -207,10 +191,7 @@ const ShowFees = () => {
                     </AccordionSummary>
                     <AccordionDetails sx={{ bgcolor: '#fafafa' }}>
                         {Object.entries(months).map(([month, fees], mIdx) => {
-                            const combinedRecords = getClassMonthlyStatus(className, fees);
                             const monthlyTotal = fees.reduce((sum, f) => sum + Number(f.amount), 0);
-                            const paidCount = combinedRecords.filter(r => r.paid).length;
-
                             return (
                                 <Accordion key={mIdx} variant="outlined" sx={{ mb: 1 }}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -218,62 +199,52 @@ const ShowFees = () => {
                                             <Stack direction="row" spacing={1} alignItems="center">
                                                 <CalendarMonthIcon fontSize="small" />
                                                 <Typography variant="subtitle2">{month}</Typography>
-                                                <Chip label={`${paidCount}/${combinedRecords.length} Paid`} size="small" color="primary" sx={{ ml: 1, height: 20, fontSize: '0.65rem' }} />
                                             </Stack>
                                             <Typography variant="subtitle2" fontWeight={700} color="success.main">Rs. {monthlyTotal}</Typography>
                                         </Stack>
                                     </AccordionSummary>
                                     <AccordionDetails>
+                                        {/* Download Buttons Section */}
                                         <Stack direction="row" spacing={2} justifyContent="flex-end" mb={2}>
-                                            <Button size="small" variant="contained" color="error" startIcon={<PictureAsPdfIcon />} onClick={() => downloadPDF(className, month, combinedRecords)}>PDF</Button>
-                                            <Button size="small" variant="contained" color="secondary" startIcon={<ReceiptLongIcon />} onClick={() => downloadPOSReceipt(className, month, fees)}>POS Receipt</Button>
+                                            <Button 
+                                                size="small" variant="contained" color="error"
+                                                startIcon={<PictureAsPdfIcon />}
+                                                onClick={() => downloadPDF(className, month, fees)}
+                                            >PDF</Button>
+                                            <Button 
+                                                size="small" variant="contained" color="secondary"
+                                                startIcon={<ReceiptLongIcon />}
+                                                onClick={() => downloadPOSReceipt(className, month, fees)}
+                                            >POS Receipt</Button>
                                         </Stack>
 
+                                        {/* Table/Cards Rendering ... (Remaining code kept same) */}
                                         {isMobile ? (
-                                            combinedRecords.map(f => (
-                                                <Card key={f._id || f.name} sx={{ mb: 1, borderLeft: f.paid ? '5px solid #4caf50' : '5px solid #f44336' }}>
+                                            fees.map(f => (
+                                                <Card key={f._id} sx={{ mb: 1 }}>
                                                     <CardContent>
-                                                        <Stack direction="row" justifyContent="space-between">
-                                                            <Typography variant="subtitle1" fontWeight={700}>{f.name}</Typography>
-                                                            <Chip label={f.paid ? "Paid" : "Unpaid"} color={f.paid ? "success" : "error"} size="small" />
+                                                        <Typography variant="subtitle1" fontWeight={700}>{f.studentName}</Typography>
+                                                        <Typography color="success.main" fontWeight={800}>Rs. {f.amount}</Typography>
+                                                        <Stack direction="row" justifyContent="flex-end">
+                                                            <IconButton onClick={() => handleEditFee(f)}><EditIcon fontSize="small" /></IconButton>
+                                                            <IconButton onClick={() => handleDeleteFee(f._id)}><DeleteIcon fontSize="small" color="error"/></IconButton>
                                                         </Stack>
-                                                        <Typography color="textSecondary" variant="body2">Roll: {f.rollNum}</Typography>
-                                                        {f.paid && <Typography color="success.main" fontWeight={800}>Rs. {f.amount}</Typography>}
-                                                        {f.paid && (
-                                                            <Stack direction="row" justifyContent="flex-end">
-                                                                <IconButton onClick={() => handleEditFee(f.feeId, f.amount)}><EditIcon fontSize="small" /></IconButton>
-                                                                <IconButton onClick={() => handleDeleteFee(f.feeId)}><DeleteIcon fontSize="small" color="error"/></IconButton>
-                                                            </Stack>
-                                                        )}
                                                     </CardContent>
                                                 </Card>
                                             ))
                                         ) : (
                                             <TableContainer component={Paper} elevation={0}>
                                                 <Table size="small">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell>Student</TableCell>
-                                                            <TableCell>Status</TableCell>
-                                                            <TableCell>Amount</TableCell>
-                                                            <TableCell align="right">Actions</TableCell>
-                                                        </TableRow>
-                                                    </TableHead>
+                                                    <TableHead><TableRow><TableCell>Student</TableCell><TableCell>Amount</TableCell><TableCell>Date</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
                                                     <TableBody>
-                                                        {combinedRecords.map(f => (
-                                                            <TableRow key={f._id || f.name}>
-                                                                <TableCell>{f.name}</TableCell>
-                                                                <TableCell>
-                                                                    <Chip label={f.paid ? "Paid" : "Unpaid"} color={f.paid ? "success" : "error"} size="small" variant="outlined" />
-                                                                </TableCell>
-                                                                <TableCell sx={{ fontWeight: 700 }}>{f.paid ? `Rs. ${f.amount}` : "-"}</TableCell>
+                                                        {fees.map(f => (
+                                                            <TableRow key={f._id}>
+                                                                <TableCell>{f.studentName}</TableCell>
+                                                                <TableCell sx={{ fontWeight: 700 }}>Rs. {f.amount}</TableCell>
+                                                                <TableCell>{new Date(f.date).toLocaleDateString()}</TableCell>
                                                                 <TableCell align="right">
-                                                                    {f.paid && (
-                                                                        <>
-                                                                            <IconButton onClick={() => handleEditFee(f.feeId, f.amount)}><EditIcon fontSize="small" /></IconButton>
-                                                                            <IconButton onClick={() => handleDeleteFee(f.feeId)}><DeleteIcon fontSize="small" color="error"/></IconButton>
-                                                                        </>
-                                                                    )}
+                                                                    <IconButton onClick={() => handleEditFee(f)}><EditIcon fontSize="small" /></IconButton>
+                                                                    <IconButton onClick={() => handleDeleteFee(f._id)}><DeleteIcon fontSize="small" color="error"/></IconButton>
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))}
