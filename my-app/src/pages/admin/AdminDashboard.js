@@ -52,7 +52,7 @@ import AdminAccounts from '../../components/AdminAccounts'; // New component for
 import AccountMenu from '../../components/AccountMenu';
 import ExamFees from '../../components/ExamFees'; // New component for exam fee structure management
 import AdmissionFees from '../../components/AdmissionFees';
- 
+import AnnualFund from '../../components/AnnualFund'; // New component for annual fund management
 
 const AdminDashboard = () => {
 
@@ -133,6 +133,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/fees" element={<AddFees />} />
                         <Route path="/Admin/showfees" element={<ShowFees />} />
                         <Route path="/Admin/fees/admission" element={<AdmissionFees />} />
+                        <Route path="/Admin/AnnualFund" element={<AnnualFund />} />
 
                         <Route path="/Admin/fees/exam" element={<ExamFees />} />
                        

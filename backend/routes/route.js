@@ -40,7 +40,10 @@ const { addExpense, getExpenses, deleteExpense, updateExpense } = require('../co
 const { askAI } = require('../controllers/ai-controller.js');
 
 const { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee, } = require('../controllers/admissionController.js');
-
+const { 
+    collectAnnualFund, 
+    getAnnualFundRecords 
+} = require('../controllers/annualFundController');
 // Admin
 router.post('/AdminReg', adminRegister);
 router.post('/AdminLogin', adminLogIn);
@@ -83,6 +86,11 @@ router.get("/StudentFees/:id", getStudentFees);
 router.get("/AllFees", getAllFees); 
 router.put("/DeleteFee/:id", deleteFee);
 router.put("/EditFee/:id", editFee);
+
+
+// Annual fund Routes
+router.post('/CollectAnnualFund', collectAnnualFund);
+router.get('/AnnualFundRecords', getAnnualFundRecords);
 
 
 // router.get("/Sclasses", getSclasses);

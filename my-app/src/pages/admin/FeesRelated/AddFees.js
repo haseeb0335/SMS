@@ -71,14 +71,16 @@ const AddFees = () => {
         }
     };
 
-    const fetchAllFees = useCallback(async () => {
-        try {
-            const res = await axios.get(`${BASE_URL}/AllFees`);
-            setFeesList(Array.isArray(res.data) ? res.data : []);
-        } catch (err) { 
-            console.error("Error fetching fees:", err); 
-        }
-    }, []);
+  const fetchAllFees = useCallback(async () => {
+    try {
+        const res = await axios.get(`${BASE_URL}/AllFees`);
+        // If your backend sends { allFees: [] }, use res.data.allFees
+        const data = res.data.allFees || (Array.isArray(res.data) ? res.data : []);
+        setFeesList(data);
+    } catch (err) { 
+        console.error("Error fetching fees:", err); 
+    }
+}, []);
 
     useEffect(() => {
         const fetchClasses = async () => {
@@ -203,16 +205,21 @@ const AddFees = () => {
         doc.save(`Receipt_${fee.studentName}.pdf`);
     };
 
-    const filteredGroupedFees = useMemo(() => {
-        return feesList.reduce((acc, fee) => {
-            const className = fee.className || "Unassigned";
-            const monthYear = new Date(fee.date).toLocaleString('default', { month: 'long', year: 'numeric' });
-            if (!acc[className]) acc[className] = {};
-            if (!acc[className][monthYear]) acc[className][monthYear] = [];
-            acc[className][monthYear].push(fee);
-            return acc;
-        }, {});
-    }, [feesList]);
+   const filteredGroupedFees = useMemo(() => {
+    if (!Array.isArray(feesList)) return {}; // Safety check
+
+    return feesList.reduce((acc, fee) => {
+        const className = fee.className || "Unassigned";
+        // Formatting month for the header
+        const monthYear = fee.date ? new Date(fee.date).toLocaleString('default', { month: 'long', year: 'numeric' }) : "Unknown Month";
+        
+        if (!acc[className]) acc[className] = {};
+        if (!acc[className][monthYear]) acc[className][monthYear] = [];
+        
+        acc[className][monthYear].push(fee);
+        return acc;
+    }, {});
+}, [feesList]);
 
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>

@@ -36,22 +36,17 @@ const AdminAccounts = () => {
                         <ListItemText primary="Add New Month Fee" />
                     </ListItemButton>
                     <Divider />
-                    <ListItemButton component={Link} to="/Admin/fees/income">
-                        <ListItemText primary="Other income (donations, fines)" />
+                    <ListItemButton component={Link} to="/Admin/AnnualFund">
+                        <ListItemText primary="Annual Fund " />
                     </ListItemButton>
                     <Divider />
                     <ListItemButton component={Link} to="/Admin/fees/structure">
                         <ListItemText primary="Assign fee structure per class" />
                     </ListItemButton>
                     <Divider />
-                    <ListItemButton component={Link} to="/fee-tracker">
-                        <ListItemText primary="Track paid/unpaid students" />
-                    </ListItemButton>
-                    <Divider />
-                    <ListItemButton component={Link} to="/Admin/fees/due-dates">
-                        <ListItemText primary="Due dates & late fines" />
-                    </ListItemButton>
-                    <Divider />
+                   
+                    
+                    
                   
                   
                 </List>
