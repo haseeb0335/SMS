@@ -62,7 +62,6 @@ const newFee = {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-// Replace your existing getAllFees with this version
 const getAllFees = async (req, res) => {
     try {
         const students = await Student.find().populate("sclassName");
@@ -71,41 +70,22 @@ const getAllFees = async (req, res) => {
         students.forEach(student => {
             if (student.fees && Array.isArray(student.fees)) {
                 student.fees.forEach(fee => {
-                    const safeFather = fee.fatherName || student.fatherName || "-";
-                    const safePrevious = fee.previousDues || 0;
-                    const safeAmount = fee.amount || 0;
-                    const safeTotalDues = typeof fee.totalDues === "number" ? fee.totalDues : (safePrevious - safeAmount);
-
                     allFees.push({
-                        _id: fee._id,
+                        ...fee.toObject(),
                         studentId: student._id,
-                        amount: safeAmount,
-                        date: fee.date,
-                        studentName: student.name || "Unknown",
-                        className: student.sclassName?.sclassName || "Class Not Assigned",
-                        fatherName: safeFather,
-                        feeMonth: fee.feeMonth || "-",
-                        previousDues: safePrevious,
-                        totalDues: safeTotalDues,
-                        receivedBy: fee.receivedBy || "-"
+                        studentName: student.name,
+                        className: student.sclassName?.sclassName || "Unassigned"
                     });
                 });
             }
         });
 
-        // ✅ Updated: Send both lists so frontend can track Unpaid students
-        res.status(200).json({
-            allFees,
-            allStudents: students.map(s => ({
-                _id: s._id,
-                name: s.name,
-                className: s.sclassName?.sclassName || "No Class"
-            }))
-        });
+        // Alphabetical Sort by Student Name for better UI
+        allFees.sort((a, b) => a.studentName.localeCompare(b.studentName));
 
+        res.status(200).json({ allFees }); // Keep it simple for frontend mapping
     } catch (error) {
-        console.error("Error in getAllFees:", error.message);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({ message: error.message });
     }
 };
 
