@@ -89,15 +89,17 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ Correct route imports
+// ✅ Routes
 const Routes = require("../routes/route.js");
 const biometricRoutes = require("../routes/biometricRoutes.js");
 
 // ✅ Middleware
 app.use(cors({
-  origin: "*",
+  origin: ["http://localhost:3000", "https://sms-xi-rose.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  credentials: true
 }));
+
 app.use(express.json());
 
 // ✅ Debug route
@@ -105,7 +107,13 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is working ✅" });
 });
 
-// ✅ Vercel SAFE MongoDB connection (CACHED)
+// ✅ Smart DB Selection (ONLINE vs OFFLINE)
+const MONGO_URI =
+  process.env.NODE_ENV === "production"
+    ? process.env.MONGODB_CLOUD   // Vercel (online)
+    : process.env.MONGODB_LOCAL;  // Local (offline)
+
+// ✅ Cached DB connection (Vercel safe)
 let cached = global.mongoose;
 
 if (!cached) {
@@ -116,12 +124,14 @@ async function connectToDatabase() {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGODB_URL, {
+    cached.promise = mongoose.connect(MONGO_URI, {
       bufferCommands: false,
-    }).then((mongoose) => {
+    })
+    .then((mongoose) => {
       console.log("MongoDB Connected ✅");
       return mongoose;
-    }).catch((err) => {
+    })
+    .catch((err) => {
       console.error("MongoDB ERROR ❌", err);
       throw err;
     });
@@ -131,7 +141,7 @@ async function connectToDatabase() {
   return cached.conn;
 }
 
-// ✅ DB middleware (IMPORTANT)
+// ✅ DB Middleware
 app.use(async (req, res, next) => {
   try {
     await connectToDatabase();
@@ -146,6 +156,15 @@ app.use(async (req, res, next) => {
 app.use("/uploads", express.static("uploads"));
 app.use("/api", biometricRoutes);
 app.use("/", Routes);
+
+// ✅ Local server (ONLY for offline)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
 
 // ✅ Error logging
 process.on("unhandledRejection", (err) => {

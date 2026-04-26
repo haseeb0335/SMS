@@ -13,6 +13,11 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
+
 const StudentAnalytics = () => {
     const theme = useTheme();
     const [studentData, setStudentData] = useState(null);
@@ -24,7 +29,7 @@ const StudentAnalytics = () => {
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
-                const res = await axios.get(`https://sms-xi-rose.vercel.app/Student/${studentId}`);
+                const res = await axios.get(`${BASE_URL}/Student/${studentId}`);
                 setStudentData(res.data);
                 setLoading(false);
             } catch (err) {

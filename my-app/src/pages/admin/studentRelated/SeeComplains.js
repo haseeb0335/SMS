@@ -27,7 +27,11 @@ import PersonIcon from '@mui/icons-material/Person';
 import HistoryIcon from '@mui/icons-material/History';
 
 // const BASE_URL = "http://localhost:5000";
-const BASE_URL = "https://sms-xi-rose.vercel.app";
+// const BASE_URL = "https://sms-xi-rose.vercel.app";
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
 
 const SeeComplains = () => {
   const [classes, setClasses] = useState([]);

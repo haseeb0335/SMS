@@ -36,6 +36,11 @@ import {
 import axios from "axios";
 import { useSelector } from "react-redux";
 
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
+
 const ParentAnalytics = () => {
   const theme = useTheme();
   const { currentUser } = useSelector((state) => state.user);
@@ -48,7 +53,7 @@ const ParentAnalytics = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const res = await axios.get(`https://sms-xi-rose.vercel.app/Student/${studentId}`);
+        const res = await axios.get(`${BASE_URL}/Student/${studentId}`);
         setStudentData(res.data);
         setLoading(false);
       } catch (err) {

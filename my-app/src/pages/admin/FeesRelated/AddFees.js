@@ -15,7 +15,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; 
 import "react-toastify/dist/ReactToastify.css";
 
-const BASE_URL = "https://sms-xi-rose.vercel.app";
+// const BASE_URL = "https://sms-xi-rose.vercel.app";
+
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
 
 const AddFees = () => {
     const theme = useTheme();

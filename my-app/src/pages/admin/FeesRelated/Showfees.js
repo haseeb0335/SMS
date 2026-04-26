@@ -32,7 +32,11 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import BarChartIcon from '@mui/icons-material/BarChart';
 
-const BASE_URL = "https://sms-xi-rose.vercel.app";
+// const BASE_URL = "https://sms-xi-rose.vercel.app";
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
 
 const ShowFees = () => {
     const theme = useTheme();

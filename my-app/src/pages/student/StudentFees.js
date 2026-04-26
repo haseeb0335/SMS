@@ -9,6 +9,11 @@ import HistoryIcon from '@mui/icons-material/History';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axios from 'axios';
 
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
+
 const StudentFees = () => {
     const [fees, setFees] = useState([]);
     const user = JSON.parse(localStorage.getItem("user"));
@@ -17,7 +22,7 @@ const StudentFees = () => {
     useEffect(() => {
         const fetchStudentData = async () => {
             try {
-                const res = await axios.get(`https://sms-xi-rose.vercel.app/Student/${studentId}`);
+                const res = await axios.get(`${BASE_URL}/Student/${studentId}`);
                 setFees(res.data.fees || []);
             } catch (err) {
                 console.error("Error fetching fees:", err);

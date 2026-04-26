@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Box, Typography, Paper, Button, Radio, RadioGroup, FormControlLabel, Divider, Alert } from "@mui/material";
 
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
+
 function StudentQuizPage() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [quizzes, setQuizzes] = useState([]);
@@ -16,7 +21,7 @@ function StudentQuizPage() {
   const fetchQuizzes = async () => {
     try {
       const classId = user.sclassName._id || user.sclassName;
-      const res = await axios.get(`https://sms-xi-rose.vercel.app/getQuiz/${classId}`);
+      const res = await axios.get(`${BASE_URL}/getQuiz/${classId}`);
       
       // DISAPPEAR LOGIC: Hide quizzes already in the student's results
       const takenQuizzes = user.quizResults?.map(r => r.quizTitle) || [];
@@ -27,7 +32,7 @@ function StudentQuizPage() {
 
  const handleSubmit = async () => {
   try {
-    const res = await axios.post("https://sms-xi-rose.vercel.app/submitQuiz", {
+    const res = await axios.post(`${BASE_URL}/submitQuiz`, {
       studentId: user._id,
       quizId: currentQuiz._id,
       answers: answers

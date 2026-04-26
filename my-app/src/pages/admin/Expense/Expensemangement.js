@@ -17,7 +17,12 @@ import { useSelector } from 'react-redux';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable'; // Import autoTable directly
 
-const BASE_URL = "https://sms-xi-rose.vercel.app";
+// const BASE_URL = "https://sms-xi-rose.vercel.app";
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
+
 const categories = ['Utilities', 'Salaries', 'Maintenance', 'Stationery', 'Events', 'Other'];
 
 const ExpenseManagement = () => {
