@@ -19,7 +19,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 // const BASE_URL = "http://localhost:5000";
-const BASE_URL = "https://sms-xi-rose.vercel.app";
+// const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const BASE_URL =
   process.env.NODE_ENV === "production"
