@@ -46,8 +46,7 @@ import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
 import ShowClasses from './classRelated/ShowClasses';
 import ExpenseManagement from './Expense/Expensemangement';
-import AiAssistant from '../../components/AiAssistant';
-import FloatingAI from '../../components/FloatingAI'; // Corrected path to components folder
+
 import AdminAccounts from '../../components/AdminAccounts'; // New component for accounts management
 import AccountMenu from '../../components/AccountMenu';
 import ExamFees from '../../components/ExamFees'; // New component for exam fee structure management
@@ -119,10 +118,7 @@ const AdminDashboard = () => {
                 <Box component="main" sx={styles.boxStyled}>
                     <Toolbar />
 
-                    {/* This ensures the AI Floating icon stays globally accessible */}
-                    <FloatingAI />
-
-                    <Routes>
+                   <Routes>
                         <Route path="/" element={<AdminHomePage />} />
                         <Route path='*' element={<Navigate to="/" />} />
 
@@ -187,7 +183,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/teacher-salary" element={<AddTeacherSalary />} />
                         <Route path="/Admin/accounts" element={<AdminAccounts />} />
                         
-                        <Route path="ai" element={<AiAssistant />} />
+                       
                         <Route path="/logout" element={<Logout />} />
                     </Routes>
                 </Box>

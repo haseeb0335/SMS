@@ -12,7 +12,7 @@ import ReportIcon from '@mui/icons-material/Report';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'; 
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+
 
 const SideBar = () => {
     const location = useLocation();
@@ -63,13 +63,6 @@ const SideBar = () => {
                         <AccountBalanceWalletIcon color={location.pathname.startsWith("/Admin/accounts") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Accounts" />
-                </ListItemButton>
-
-                <ListItemButton component={Link} to="ai">
-                    <ListItemIcon>
-                        <SmartToyIcon color={location.pathname.startsWith("ai") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="AI Assistant" />
                 </ListItemButton>
 
                 <ListItemButton component={Link} to="/Admin/notices">
