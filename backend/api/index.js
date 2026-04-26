@@ -95,7 +95,7 @@ const biometricRoutes = require("../routes/biometricRoutes.js");
 
 // ✅ Middleware
 app.use(cors({
-  origin: ["http://localhost:3000", "https://sms-xi-rose.vercel.app"],
+  origin: ["http://localhost:3000", "https://sms-xi-rose.vercel.app", "https://sms-tinj.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
