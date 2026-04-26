@@ -108,10 +108,9 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Smart DB Selection (ONLINE vs OFFLINE)
-const MONGO_URI =
-  process.env.NODE_ENV === "production"
-    ? process.env.MONGODB_CLOUD   // Vercel (online)
-    : process.env.MONGODB_LOCAL;  // Local (offline)
+const MONGO_URI = (process.env.NODE_ENV === "production") 
+    ? process.env.MONGODB_CLOUD 
+    : (process.env.MONGODB_LOCAL || process.env.MONGODB_CLOUD);
 
 // ✅ Cached DB connection (Vercel safe)
 let cached = global.mongoose;
