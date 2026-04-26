@@ -24,19 +24,30 @@ const AdminHomePage = () => {
 
     const adminID = currentUser?._id;
   
-    useEffect(() => {
-        const fetchFees = async () => {
-            try {
-                const res = await fetch("https://sms-xi-rose.vercel.app/AllFees");
-                const data = await res.json();
-                const total = data.reduce((sum, fee) => sum + Number(fee.amount), 0);
-                setTotalFees(total);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-        fetchFees();
-    }, []);
+  useEffect(() => {
+    const fetchFees = async () => {
+        try {
+            const res = await fetch("https://sms-xi-rose.vercel.app/AllFees");
+            const data = await res.json();
+            
+            // Log data to console to verify structure
+            console.log("Fetched Fees Data:", data);
+
+            // Handle both array and object formats
+            const actualFees = Array.isArray(data) ? data : (data.allFees || []);
+            
+            const total = actualFees.reduce((sum, fee) => {
+                const amount = Number(fee.amount);
+                return sum + (isNaN(amount) ? 0 : amount);
+            }, 0);
+
+            setTotalFees(total);
+        } catch (error) {
+            console.log("Error fetching fees:", error);
+        }
+    };
+    fetchFees();
+}, []);
 
     useEffect(() => {
         if (adminID) {

@@ -39,7 +39,7 @@ const AnnualFund = () => {
 
     const user = JSON.parse(localStorage.getItem("user"));
     const schoolId = user?._id;
-    const schoolName = user?.schoolName || "My School System";
+    const schoolName = user?.schoolName || "School System";
 
     const fetchData = useCallback(async () => {
         try {
@@ -59,20 +59,40 @@ const AnnualFund = () => {
         axios.get(`${BASE_URL}/Sclass/Students/${selectedClass}`).then(res => setStudents(res.data));
     }, [selectedClass]);
 
-    const handleEditInitiate = (record) => {
-        setEditId(record._id);
-        const cls = classes.find(c => c.sclassName === record.className);
-        setSelectedClass(cls?._id || "");
-        setSelectedStudent(record.studentId);
-        setFatherName(record.fatherName);
-        setFundAmount(record.amount);
-        setCollectorName(record.collectorName || "");
-        setDescription(record.feeMonth);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const handleStudentChange = (studentId) => {
+        setSelectedStudent(studentId);
+        const student = students.find(s => s._id === studentId);
+        if (student) {
+            setFatherName(student.fatherName || "");
+            // Optionally auto-fill whatsapp if available in student record
+            setWhatsappNumber(student.phoneNum || ""); 
+        }
+    };
+
+    const downloadPDF = (record) => {
+        const doc = new jsPDF({ unit: "mm", format: [80, 150] });
+        doc.setFontSize(14).text(schoolName, 40, 15, { align: "center" });
+        doc.setFontSize(9).text("Annual Fund Receipt", 40, 22, { align: "center" });
+        
+        autoTable(doc, {
+            startY: 28,
+            body: [
+                ["Student", record.studentName],
+                ["Father", record.fatherName],
+                ["Class", record.className],
+                ["Fund Type", record.feeMonth],
+                ["Amount", `Rs. ${record.amount}`],
+                ["Date", new Date(record.date).toLocaleDateString()],
+                ["Collector", record.collectorName || "Admin"]
+            ],
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2 }
+        });
+        doc.save(`${record.studentName}_AnnualFund.pdf`);
     };
 
     const handleSubmission = async () => {
-        if (!selectedStudent || !fundAmount) return toast.warning("Required fields missing");
+        if (!selectedStudent || !fundAmount) return toast.warning("Missing required fields");
 
         const studentObj = students.find(s => s._id === selectedStudent);
         const classObj = classes.find(c => c._id === selectedClass);
@@ -95,31 +115,38 @@ const AnnualFund = () => {
                 toast.success("Record Updated");
             } else {
                 await axios.post(`${BASE_URL}/CollectAnnualFund`, data);
-                toast.success("Fund Collected");
-                // Auto-WhatsApp only on new collection
-                const msg = `*ANNUAL FUND RECEIPT*%0A*Student:* ${data.studentName}%0A*Amount:* Rs.${data.amount}`;
-                window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+                toast.success("Fund Collected Successfully!");
+                
+                // WhatsApp Logic
+                if (whatsappNumber) {
+                    const msg = `*ANNUAL FUND RECEIPT*%0A*School:* ${schoolName}%0A*Student:* ${data.studentName}%0A*Amount:* Rs. ${data.amount}%0A*Status:* Paid. Thank you!`;
+                    window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+                }
             }
             resetForm();
             fetchData();
-        } catch (err) { toast.error("Action failed"); }
+        } catch (err) { toast.error("Operation failed"); }
     };
 
     const resetForm = () => {
         setEditId(null);
         setFundAmount("");
+        setSelectedStudent("");
         setFatherName("");
         setWhatsappNumber("");
     };
 
     const groupedFunds = useMemo(() => {
-        return fundRecords.reduce((acc, curr) => {
+        const filtered = fundRecords.filter(f => 
+            f.studentName?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        return filtered.reduce((acc, curr) => {
             const cls = curr.className || "Other";
             if (!acc[cls]) acc[cls] = [];
             acc[cls].push(curr);
             return acc;
         }, {});
-    }, [fundRecords]);
+    }, [fundRecords, searchTerm]);
 
     const chartData = {
         labels: Object.keys(groupedFunds),
@@ -132,10 +159,11 @@ const AnnualFund = () => {
     };
 
     return (
-        <Box sx={{ p: 4, bgcolor: '#f8fafc', minHeight: '100vh' }}>
-            <Typography variant="h4" fontWeight={900} gutterBottom>Annual Fund Dashboard</Typography>
+        <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+            <Typography variant="h4" fontWeight={900} gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <WorkspacePremiumIcon fontSize="large" color="primary" /> Annual Fund Portal
+            </Typography>
 
-            {/* Analytics Section */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={8}>
                     <Paper sx={{ p: 3, borderRadius: 4, height: 300 }}>
@@ -143,45 +171,50 @@ const AnnualFund = () => {
                     </Paper>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 3, bgcolor: '#1e293b', color: 'white', borderRadius: 4, height: '100%' }}>
-                        <Typography variant="h6">Total Collection</Typography>
-                        <Typography variant="h3" fontWeight={900}>Rs. {fundRecords.reduce((s, r) => s + r.amount, 0)}</Typography>
+                    <Card sx={{ p: 3, bgcolor: '#1e293b', color: 'white', borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Typography variant="h6" sx={{ opacity: 0.8 }}>Total Collection</Typography>
+                        <Typography variant="h3" fontWeight={900}>Rs. {fundRecords.reduce((s, r) => s + r.amount, 0).toLocaleString()}</Typography>
                     </Card>
                 </Grid>
             </Grid>
 
-            {/* Input Form */}
             <Paper sx={{ p: 4, mb: 4, borderRadius: 4 }}>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={3}><TextField fullWidth label="Collector Name" value={collectorName} onChange={e => setCollectorName(e.target.value)} /></Grid>
+                    
                     <Grid item xs={12} md={3}><TextField select fullWidth label="Class" value={selectedClass} onChange={e => setSelectedClass(e.target.value)}>{classes.map(c => <MenuItem key={c._id} value={c._id}>{c.sclassName}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={3}><TextField select fullWidth label="Student" value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}>{students.map(s => <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={3}><TextField fullWidth label="Amount" type="number" value={fundAmount} onChange={e => setFundAmount(e.target.value)} /></Grid>
-                    <Grid item xs={12} md={12}><Button variant="contained" fullWidth sx={{ height: 50 }} onClick={handleSubmission}>{editId ? "Update Record" : "Submit & Send WhatsApp"}</Button></Grid>
+                    <Grid item xs={12} md={3}><TextField select fullWidth label="Student" value={selectedStudent} onChange={e => handleStudentChange(e.target.value)} disabled={!selectedClass}>{students.map(s => <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>)}</TextField></Grid>
+                    <Grid item xs={12} md={3}><TextField fullWidth label="Father Name" value={fatherName} onChange={e => setFatherName(e.target.value)} /></Grid>
+                    <Grid item xs={12} md={4}><TextField fullWidth label="WhatsApp Number" placeholder="923001234567" value={whatsappNumber} onChange={e => setWhatsappNumber(e.target.value)} /></Grid>
+                    
+                    <Grid item xs={12} md={4}><TextField fullWidth label="Amount" type="number" value={fundAmount} onChange={e => setFundAmount(e.target.value)} /></Grid>
+                    <Grid item xs={12} md={3}><TextField fullWidth label="Collector Name" value={collectorName} onChange={e => setCollectorName(e.target.value)} /></Grid>
+                    <Grid item xs={12} md={4}><Button variant="contained" fullWidth sx={{ height: 56, fontWeight: 700 }} onClick={handleSubmission} startIcon={<WhatsAppIcon />}>{editId ? "Update Record" : "Submit & Notify"}</Button></Grid>
                 </Grid>
             </Paper>
 
-            {/* Records List */}
+            <TextField placeholder="Search Students..." fullWidth sx={{ mb: 3, bgcolor: 'white' }} onChange={e => setSearchTerm(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
+
             {Object.entries(groupedFunds).map(([className, records]) => (
-                <Card key={className} sx={{ mb: 3, borderRadius: 3, overflow: 'hidden' }}>
-                    <Box sx={{ p: 2, bgcolor: '#f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
+                <Card key={className} sx={{ mb: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                    <Box sx={{ p: 2, bgcolor: '#f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography fontWeight={800}>{className}</Typography>
                         <Typography color="primary" fontWeight={700}>Collector: {records[0]?.collectorName || "Admin"}</Typography>
                     </Box>
                     <TableContainer>
                         <Table size="small">
-                            <TableHead><TableRow><TableCell>Student/Father</TableCell><TableCell>Date</TableCell><TableCell>Amount</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
+                            <TableHead><TableRow><TableCell>Student / Father</TableCell><TableCell>Date</TableCell><TableCell>Amount</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
                             <TableBody>
                                 {records.map((r) => (
-                                    <TableRow key={r._id}>
+                                    <TableRow key={r._id} hover>
                                         <TableCell>
                                             <Typography variant="body2" fontWeight={700}>{r.studentName}</Typography>
                                             <Typography variant="caption" color="textSecondary">S/O: {r.fatherName}</Typography>
                                         </TableCell>
                                         <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
-                                        <TableCell sx={{ fontWeight: 800 }}>Rs. {r.amount}</TableCell>
+                                        <TableCell sx={{ fontWeight: 800, color: 'success.main' }}>Rs. {r.amount}</TableCell>
                                         <TableCell align="right">
-                                            <IconButton color="primary" onClick={() => handleEditInitiate(r)}><EditIcon fontSize="small" /></IconButton>
+                                            <IconButton color="primary" onClick={() => { setEditId(r._id); handleStudentChange(r.studentId); setFundAmount(r.amount); window.scrollTo(0,0); }}><EditIcon fontSize="small" /></IconButton>
+                                            <IconButton color="error" onClick={() => downloadPDF(r)}><PictureAsPdfIcon fontSize="small" /></IconButton>
                                             <IconButton color="error" onClick={() => axios.put(`${BASE_URL}/DeleteFee/${r._id}`).then(fetchData)}><DeleteIcon fontSize="small" /></IconButton>
                                         </TableCell>
                                     </TableRow>

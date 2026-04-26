@@ -5,7 +5,6 @@ const askAI = async (req, res) => {
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.error("API KEY missing");
             return res.status(500).json({ message: "API Key missing" });
         }
 
@@ -13,33 +12,39 @@ const askAI = async (req, res) => {
 
         const { question, contextData } = req.body;
 
-        // ✅ UPDATED MODEL
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash" 
+        if (!question) {
+            return res.status(400).json({ message: "Question is required" });
+        }
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash"
         });
 
         const prompt = `
-        You are "SMS AI", assistant for a School Management System.
+You are SMS AI, assistant for a School Management System.
 
-        Admin: ${contextData?.adminName || "User"}
-        School: ${contextData?.schoolName || "School"}
+Admin: ${contextData?.adminName || "User"}
+School: ${contextData?.schoolName || "School"}
 
-        Expenses Data:
-        ${JSON.stringify(contextData?.expenses?.slice(0, 10) || [])}
+Expenses:
+${JSON.stringify(contextData?.expenses?.slice(0, 5) || [])}
 
-        Question:
-        ${question}
-        `;
+Question:
+${question}
+`;
 
         const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
 
-        res.status(200).json({ answer: text });
+        // ✅ SAFE extraction
+        const text = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text 
+                  || "No response from AI";
+
+        return res.status(200).json({ answer: text });
 
     } catch (error) {
-        console.error("AI ERROR FULL:", error);
-        res.status(500).json({
+        console.error("AI ERROR:", error);
+
+        return res.status(500).json({
             message: "AI failed",
             error: error.message
         });

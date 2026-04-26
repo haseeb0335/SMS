@@ -20,7 +20,7 @@ import {
 // Charts
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    Cell, PieChart, Pie, LineChart, Line, Legend 
+    Cell, PieChart, Pie, Legend, AreaChart, Area 
 } from 'recharts';
 
 // Icons
@@ -29,9 +29,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SchoolIcon from '@mui/icons-material/School';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 const BASE_URL = "https://sms-xi-rose.vercel.app";
 
@@ -39,7 +38,7 @@ const ShowFees = () => {
     const theme = useTheme();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     
     const { studentsList } = useSelector((state) => state.student);
     const { currentUser } = useSelector(state => state.user);
@@ -84,63 +83,43 @@ const ShowFees = () => {
 
     // --- CHART DATA PREP ---
     const lineChartData = useMemo(() => {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const monthlyData = feesList.reduce((acc, fee) => {
             const month = new Date(fee.date).toLocaleString('default', { month: 'short' });
             acc[month] = (acc[month] || 0) + Number(fee.amount);
             return acc;
         }, {});
-        return Object.entries(monthlyData).map(([name, amount]) => ({ name, amount }));
+        return months.filter(m => monthlyData[m]).map(name => ({ name, amount: monthlyData[name] }));
     }, [feesList]);
 
     const pieChartData = useMemo(() => {
         const totalStudents = studentsList?.length || 0;
-        const paidStudents = feesList.reduce((acc, fee) => {
-            acc.add(fee.studentId);
-            return acc;
-        }, new Set()).size;
+        const paidStudents = feesList.reduce((acc, fee) => { acc.add(fee.studentId); return acc; }, new Set()).size;
         return [
-            { name: 'Paid', value: paidStudents, color: '#4caf50' },
-            { name: 'Unpaid', value: Math.max(0, totalStudents - paidStudents), color: '#f44336' }
+            { name: 'Paid', value: paidStudents, color: '#10b981' },
+            { name: 'Unpaid', value: Math.max(0, totalStudents - paidStudents), color: '#ef4444' }
         ];
     }, [studentsList, feesList]);
 
-    // --- DOWNLOADS ---
+    // NEW: Class-wise Chart Data
+    const classChartData = useMemo(() => {
+        return Object.entries(groupedData).map(([name, data]) => ({
+            name,
+            total: data.total
+        }));
+    }, [groupedData]);
+
     const downloadClassPDF = (className, data) => {
         const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text(`Class Report: ${className}`, 14, 20);
-        doc.setFontSize(10);
-        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 28);
-
-        const rows = data.students.map(s => [
-            s.rollNum, 
-            s.name, 
-            s.feeHistory.length > 0 ? 'Paid' : 'Unpaid',
-            `Rs. ${s.feeHistory.reduce((sum, f) => sum + Number(f.amount), 0)}`
-        ]);
-
-        autoTable(doc, {
-            head: [['Roll No', 'Name', 'Status', 'Total Paid']],
-            body: rows,
-            startY: 35,
-            theme: 'grid',
-            headStyles: { fillColor: [25, 118, 210] }
-        });
+        doc.setFontSize(18).text(`Class Report: ${className}`, 14, 20);
+        const rows = data.students.map(s => [s.rollNum, s.name, s.feeHistory.length > 0 ? 'Paid' : 'Unpaid', `Rs. ${s.feeHistory.reduce((sum, f) => sum + Number(f.amount), 0)}`]);
+        autoTable(doc, { head: [['Roll No', 'Name', 'Status', 'Total Paid']], body: rows, startY: 35, theme: 'grid', headStyles: { fillColor: [25, 118, 210] } });
         doc.save(`${className}_Report.pdf`);
     };
 
     const downloadIndividualPOS = (fee) => {
         const receiptWindow = window.open("", "_blank", "width=400,height=600");
-        receiptWindow.document.write(`
-            <html><body style="font-family:monospace; width:280px; padding:20px;">
-                <center><h2>FEE RECEIPT</h2><hr/></center>
-                <p><b>Student:</b> ${fee.studentName}</p>
-                <p><b>Class:</b> ${fee.className}</p>
-                <p><b>Date:</b> ${new Date(fee.date).toLocaleDateString()}</p>
-                <p><b>Amount: Rs. ${fee.amount}</b></p>
-                <hr/><center><p>Thank You!</p></center>
-            </body></html>
-        `);
+        receiptWindow.document.write(`<html><body style="font-family:monospace; width:280px; padding:20px;"><center><h2>FEE RECEIPT</h2><hr/></center><p><b>Student:</b> ${fee.studentName}</p><p><b>Class:</b> ${fee.className}</p><p><b>Amount: Rs. ${fee.amount}</b></p><hr/><center><p>Thank You!</p></center></body></html>`);
         receiptWindow.document.close();
         receiptWindow.print();
     };
@@ -152,77 +131,92 @@ const ShowFees = () => {
             <Typography variant="h4" fontWeight={900} color="primary" gutterBottom>Financial Analytics</Typography>
 
             <Grid container spacing={3} mb={4}>
-                {/* Revenue Card */}
+                {/* Total Collection Card */}
                 <Grid item xs={12} md={3}>
-                    <Card sx={{ p: 3, borderRadius: 4, height: '100%', bgcolor: 'primary.main', color: 'white' }}>
-                        <Typography variant="overline" sx={{ opacity: 0.8 }}>Total Collection</Typography>
-                        <Typography variant="h4" fontWeight={900}>Rs. {feesList.reduce((s, f) => s + Number(f.amount), 0).toLocaleString()}</Typography>
-                        <Stack direction="row" spacing={1} mt={1}><TrendingUpIcon /><Typography variant="caption">Live Update</Typography></Stack>
+                    <Card sx={{ p: 3, borderRadius: 5, height: '100%', background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', color: 'white' }}>
+                        <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700 }}>Total Collection</Typography>
+                        <Typography variant={isMobile ? "h4" : "h3"} fontWeight={900}>Rs. {feesList.reduce((s, f) => s + Number(f.amount), 0).toLocaleString()}</Typography>
+                        <Stack direction="row" spacing={1} mt={1} alignItems="center"><TrendingUpIcon fontSize="small" /><Typography variant="caption">REAL-TIME</Typography></Stack>
                     </Card>
                 </Grid>
 
-                {/* Line Chart */}
+                {/* Class-wise Collection Bar Chart */}
                 <Grid item xs={12} md={5}>
-                    <Card sx={{ p: 2, borderRadius: 4, height: 250 }}>
-                        <Typography variant="subtitle2" fontWeight={700} mb={1}>Monthly Revenue Trend</Typography>
-                        <ResponsiveContainer width="100%" height="85%">
-                            <LineChart data={lineChartData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" fontSize={12} tickLine={false} />
-                                <Tooltip />
-                                <Line type="monotone" dataKey="amount" stroke={theme.palette.primary.main} strokeWidth={3} dot={{ r: 6 }} />
-                            </LineChart>
+                    <Card sx={{ p: 2, borderRadius: 5, height: 300, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <Typography variant="subtitle2" fontWeight={800} color="text.secondary" mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <BarChartIcon color="primary" fontSize="small" /> CLASS-WISE COLLECTION
+                        </Typography>
+                        <ResponsiveContainer width="100%" height="80%">
+                            <BarChart data={classChartData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontWeight: 600 }} />
+                                <YAxis hide />
+                                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }} />
+                                <Bar dataKey="total" fill={theme.palette.primary.main} radius={[6, 6, 0, 0]} barSize={30} />
+                            </BarChart>
                         </ResponsiveContainer>
                     </Card>
                 </Grid>
 
-                {/* Pie Chart */}
+                {/* Payment Ratio Pie */}
                 <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 2, borderRadius: 4, height: 250 }}>
-                        <Typography variant="subtitle2" fontWeight={700} mb={1}>Payment Status Ratio</Typography>
+                    <Card sx={{ p: 2, borderRadius: 5, height: 300, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <Typography variant="subtitle2" fontWeight={800} color="text.secondary" mb={1}>PAYMENT STATUS RATIO</Typography>
                         <ResponsiveContainer width="100%" height="85%">
                             <PieChart>
-                                <Pie data={pieChartData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                <Pie data={pieChartData} innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value" stroke="none">
                                     {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                 </Pie>
                                 <Tooltip />
-                                <Legend verticalAlign="bottom" height={36}/>
+                                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
                             </PieChart>
+                        </ResponsiveContainer>
+                    </Card>
+                </Grid>
+                
+                {/* Monthly Trend Area Chart */}
+                <Grid item xs={12}>
+                    <Card sx={{ p: 3, borderRadius: 5, height: 350, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <Typography variant="subtitle2" fontWeight={800} color="text.secondary" mb={2}>MONTHLY REVENUE TREND</Typography>
+                        <ResponsiveContainer width="100%" height="85%">
+                            <AreaChart data={lineChartData}>
+                                <defs>
+                                    <linearGradient id="colorAmt" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="name" fontSize={12} axisLine={false} tickLine={false} />
+                                <YAxis hide />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorAmt)" />
+                            </AreaChart>
                         </ResponsiveContainer>
                     </Card>
                 </Grid>
             </Grid>
 
-            {/* Class-wise Lists */}
+            {/* Class-wise Accordions */}
             {Object.entries(groupedData).map(([className, data], idx) => (
-                <Accordion key={idx} sx={{ mb: 2, borderRadius: '16px !important', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                <Accordion key={idx} sx={{ mb: 2, borderRadius: '20px !important', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={2}>
+                        <Stack direction="row" spacing={2} alignItems="center" width="100%">
                             <SchoolIcon color="primary" />
-                            <Typography fontWeight={800} variant="h6">{className}</Typography>
-                            <Chip label={`${data.students.length} Students`} size="small" variant="outlined" />
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Button 
-                                size="small" 
-                                startIcon={<PictureAsPdfIcon />} 
-                                onClick={(e) => { e.stopPropagation(); downloadClassPDF(className, data); }}
-                                variant="contained"
-                                color="inherit"
-                                sx={{ bgcolor: '#f1f5f9', color: '#1e293b' }}
-                            >
-                                Class PDF
-                            </Button>
+                            <Typography fontWeight={800}>{className}</Typography>
+                            <Chip label={`Total: Rs. ${data.total.toLocaleString()}`} size="small" sx={{ fontWeight: 800, bgcolor: '#e0f2fe', color: '#0369a1' }} />
+                            {!isMobile && <Box sx={{ flexGrow: 1 }} />}
+                            <Button size="small" startIcon={<PictureAsPdfIcon />} onClick={(e) => { e.stopPropagation(); downloadClassPDF(className, data); }} variant="text">Report</Button>
                         </Stack>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <TableContainer component={Paper} elevation={0}>
+                        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: '12px' }}>
                             <Table size="small">
                                 <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 700 }}>Roll No</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 700 }}>Action</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -231,22 +225,13 @@ const ShowFees = () => {
                                         return (
                                             <TableRow key={student._id} hover>
                                                 <TableCell>{student.rollNum}</TableCell>
-                                                <TableCell fontWeight={600}>{student.name}</TableCell>
-                                                <TableCell>
-                                                    <Chip 
-                                                        label={latestFee ? "Paid" : "Unpaid"} 
-                                                        color={latestFee ? "success" : "error"} 
-                                                        size="small" 
-                                                        variant={latestFee ? "outlined" : "filled"}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
+                                                <TableCell sx={{ fontWeight: 600 }}>{student.name}</TableCell>
+                                                <TableCell><Chip label={latestFee ? "Paid" : "Unpaid"} color={latestFee ? "success" : "error"} size="small" sx={{ fontWeight: 800, fontSize: '0.65rem' }} /></TableCell>
+                                                <TableCell align="right">
                                                     {latestFee ? (
-                                                        <IconButton size="small" onClick={() => downloadIndividualPOS(latestFee)} color="primary">
-                                                            <ReceiptLongIcon fontSize="small" />
-                                                        </IconButton>
+                                                        <IconButton size="small" onClick={() => downloadIndividualPOS(latestFee)} color="primary"><ReceiptLongIcon fontSize="small" /></IconButton>
                                                     ) : (
-                                                        <Button size="small" onClick={() => navigate("/Admin/fees")}>Collect</Button>
+                                                        <Button variant="outlined" size="small" onClick={() => navigate("/Admin/fees")}>Collect</Button>
                                                     )}
                                                 </TableCell>
                                             </TableRow>
