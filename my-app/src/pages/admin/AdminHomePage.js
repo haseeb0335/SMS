@@ -12,6 +12,11 @@ import { getAllSclasses } from '../../redux/sclassRelated/sclassHandle';
 import { getAllStudents } from '../../redux/studentRelated/studentHandle';
 import { getAllTeachers } from '../../redux/teacherRelated/teacherHandle';
 
+  const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://sms-xi-rose.vercel.app"
+    : "http://localhost:5000";
+
 const AdminHomePage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -27,7 +32,7 @@ const AdminHomePage = () => {
   useEffect(() => {
     const fetchFees = async () => {
         try {
-            const res = await fetch("https://sms-xi-rose.vercel.app/AllFees");
+            const res = await fetch(`${BASE_URL}/AllFees`);
             const data = await res.json();
             
             // Log data to console to verify structure
