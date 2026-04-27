@@ -12,6 +12,8 @@ import { getAllSclasses } from '../../redux/sclassRelated/sclassHandle';
 import { getAllStudents } from '../../redux/studentRelated/studentHandle';
 import { getAllTeachers } from '../../redux/teacherRelated/teacherHandle';
 
+
+
   const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
