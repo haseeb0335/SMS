@@ -82,97 +82,62 @@
 
 // module.exports = app;
 
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import Routes from "../routes/route.js";
+import biometricRoutes from "../routes/biometricRoutes.js";
 
+dotenv.config();
 const app = express();
 
-// ✅ Routes
-const Routes = require("../routes/route.js");
-const biometricRoutes = require("../routes/biometricRoutes.js");
-
-// ✅ Middleware
+// ✅ CORS: Added your local IP so your phone is allowed to connect
 app.use(cors({
-  origin: ["http://localhost:3000", "https://sms-xi-rose.vercel.app", "https://sms-tinj.vercel.app" ,"http://192.168.0.107:3000" ],
+  origin: [
+    "http://localhost:3000", 
+    "http://192.168.0.107:3000", // Your Laptop's IP
+    "https://sms-xi-rose.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
 
 app.use(express.json());
 
-// ✅ Debug route
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Server is working ✅" });
-});
-
-// ✅ Smart DB Selection (ONLINE vs OFFLINE)
-const MONGO_URI = (process.env.NODE_ENV === "production") 
-    ? process.env.MONGODB_CLOUD 
-    : (process.env.MONGODB_LOCAL || process.env.MONGODB_CLOUD);
-
-// ✅ Cached DB connection (Vercel safe)
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+// ✅ DB Selection Logic
+const MONGO_URI = process.env.MONGODB_CLOUD || process.env.MONGODB_LOCAL;
 
 async function connectToDatabase() {
-  if (cached.conn) return cached.conn;
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGO_URI, {
-      bufferCommands: false,
-    })
-    .then((mongoose) => {
-      console.log("MongoDB Connected ✅");
-      return mongoose;
-    })
-    .catch((err) => {
-      console.error("MongoDB ERROR ❌", err);
-      throw err;
-    });
+  if (mongoose.connection.readyState === 1) return;
+  
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ MongoDB Connected to:", mongoose.connection.name); 
+  } catch (err) {
+    console.error("❌ MongoDB Connection Error:", err);
   }
-
-  cached.conn = await cached.promise;
-  return cached.conn;
 }
 
-// ✅ DB Middleware
+// ✅ Middleware to ensure DB is connected before any request
 app.use(async (req, res, next) => {
-  try {
-    await connectToDatabase();
-    next();
-  } catch (error) {
-    console.error("DB CONNECTION FAILED ❌", error);
-    return res.status(500).json({ error: "Database connection failed" });
-  }
+  await connectToDatabase();
+  next();
 });
 
-// ✅ Routes
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Server is working ✅", db: mongoose.connection.name });
+});
+
 app.use("/uploads", express.static("uploads"));
 app.use("/api", biometricRoutes);
 app.use("/", Routes);
 
-// ✅ Local server (ONLY for offline)
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-
+// ✅ Start Server on 0.0.0.0 to allow network access
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running!`);
-    console.log(`Local: http://localhost:${PORT}`);
-    console.log(`Network: http://192.168.0.107:${PORT}`);
+  console.log(`🚀 Server running on http://192.168.0.107:${PORT}`);
 });
 
-// ✅ Error logging
-process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED REJECTION:", err);
-});
-
-process.on("uncaughtException", (err) => {
-  console.error("UNCAUGHT EXCEPTION:", err);
-});
-
-module.exports = app;
+export default app;
