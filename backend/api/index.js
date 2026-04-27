@@ -95,7 +95,7 @@ const biometricRoutes = require("../routes/biometricRoutes.js");
 
 // ✅ Middleware
 app.use(cors({
-  origin: ["http://localhost:3000", "https://sms-xi-rose.vercel.app", "https://sms-tinj.vercel.app"],
+  origin: ["http://localhost:3000", "https://sms-xi-rose.vercel.app", "https://sms-tinj.vercel.app" ,"http://192.168.0.107:3000" ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
@@ -160,10 +160,11 @@ app.use("/", Routes);
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
 
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running!`);
+    console.log(`Local: http://localhost:${PORT}`);
+    console.log(`Network: http://192.168.0.107:${PORT}`);
+});
 
 // ✅ Error logging
 process.on("unhandledRejection", (err) => {

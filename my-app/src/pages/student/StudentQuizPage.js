@@ -5,7 +5,7 @@ import { Box, Typography, Paper, Button, Radio, RadioGroup, FormControlLabel, Di
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
-    : "http://localhost:5000";
+    : "http://192.168.0.107:5000";
 
 function StudentQuizPage() {
   const user = JSON.parse(localStorage.getItem("user"));

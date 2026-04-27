@@ -11,7 +11,7 @@ import {
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
-    : "http://localhost:5000";
+    : "http://192.168.0.107:5000";
 
 export const getAllNotices = (id, address) => async (dispatch) => {
     dispatch(getRequest());
