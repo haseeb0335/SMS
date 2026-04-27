@@ -97,7 +97,8 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000", 
-    "http://192.168.0.107:3000", // Your Laptop's IP
+    "http://192.168.0.107:3000",
+     "https://sms-tinj.vercel.app",
     "https://sms-xi-rose.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
