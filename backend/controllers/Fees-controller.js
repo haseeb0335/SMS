@@ -2,9 +2,8 @@ import { Student } from "../models/studentSchema.js";
 import mongoose from 'mongoose';
 
 // ✅ ADD FEE
-const addFees = async (req, res) => {
+export const addFees = async (req, res) => {
     try {
-        // Destructure all new fields from the request body
         const { 
             studentId, 
             amount, 
@@ -12,7 +11,6 @@ const addFees = async (req, res) => {
             fatherName, 
             feeMonth, 
             previousDues, 
-            totalDues, 
             receivedBy 
         } = req.body; 
         
@@ -32,37 +30,35 @@ const addFees = async (req, res) => {
 
         if (alreadyPaid) return res.status(400).json({ message: "Fee already paid for this selected month" });
 
-     // ✅ Calculate balance properly
-const safePrevious = Number(previousDues) || 0;
-const safeAmount = Number(amount) || 0;
-const calculatedBalance = safePrevious - safeAmount;
+        // ✅ Calculate balance properly
+        const safePrevious = Number(previousDues) || 0;
+        const safeAmount = Number(amount) || 0;
+        const calculatedBalance = safePrevious - safeAmount;
 
-const newFee = {
-    _id: new mongoose.Types.ObjectId(),
-    amount: safeAmount,
-    date: selectedDate,
-    studentName: student.name,
-    className: student.sclassName?.sclassName || "No Class",
-
-    fatherName: fatherName || "-",
-    feeMonth: feeMonth || "-",
-    previousDues: safePrevious,
-
-    // ✅ Always correct now
-    totalDues: calculatedBalance,
-
-    receivedBy: receivedBy || "-"
-};
+        const newFee = {
+            _id: new mongoose.Types.ObjectId(),
+            amount: safeAmount,
+            date: selectedDate,
+            studentName: student.name,
+            className: student.sclassName?.sclassName || "No Class",
+            fatherName: fatherName || "-",
+            feeMonth: feeMonth || "-",
+            previousDues: safePrevious,
+            totalDues: calculatedBalance,
+            receivedBy: receivedBy || "-"
+        };
 
         student.fees.push(newFee);
         await student.save();
-        res.status(200).json({ message: "Fee added", fee: newFee });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(200).json({ message: "Fee added successfully", fee: newFee });
+    } catch (err) {
+        console.error("ADD FEE ERROR:", err);
+        res.status(500).json({ message: "Internal Server Error", error: err.message });
     }
 };
-const getAllFees = async (req, res) => {
+
+// ✅ GET ALL FEES (For Admin Dashboard)
+export const getAllFees = async (req, res) => {
     try {
         const students = await Student.find().populate("sclassName");
         let allFees = [];
@@ -80,87 +76,67 @@ const getAllFees = async (req, res) => {
             }
         });
 
-        // Alphabetical Sort by Student Name for better UI
-        allFees.sort((a, b) => a.studentName.localeCompare(b.studentName));
+        // Sort by date (newest first) instead of name for financial clarity
+        allFees.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        res.status(200).json({ allFees }); // Keep it simple for frontend mapping
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(200).json({ allFees }); 
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching fees", error: err.message });
     }
 };
 
-// DELETE FEE
-const deleteFee = async (req, res) => {
+// ✅ DELETE FEE
+export const deleteFee = async (req, res) => {
     try {
         const feeId = req.params.id;
         const student = await Student.findOne({ "fees._id": feeId });
 
-        if (!student) {
-            return res.status(404).json({ message: "Fee not found" });
-        }
+        if (!student) return res.status(404).json({ message: "Fee record not found" });
 
         student.fees = student.fees.filter(
             (fee) => fee._id.toString() !== feeId
         );
 
         await student.save();
-        res.status(200).json({ message: "Fee deleted" });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Error deleting fee" });
+        res.status(200).json({ message: "Fee deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Error deleting fee", error: err.message });
     }
 };
 
-// EDIT FEE
-const editFee = async (req, res) => {
+// ✅ EDIT FEE
+export const editFee = async (req, res) => {
     try {
         const feeId = req.params.id;
         const { amount } = req.body;
 
-        const student = await Student.findOne({
-            "fees._id": feeId
-        });
-
-        if (!student) {
-            return res.status(404).json({ message: "Fee not found" });
-        }
+        const student = await Student.findOne({ "fees._id": feeId });
+        if (!student) return res.status(404).json({ message: "Student/Fee not found" });
 
         const fee = student.fees.id(feeId);
+        if (!fee) return res.status(404).json({ message: "Fee details not found" });
 
-        if (!fee) {
-            return res.status(404).json({ message: "Fee not found" });
-        }
+        // Update amount and recalculate the totalDues for this specific record
+        fee.amount = Number(amount);
+        fee.totalDues = fee.previousDues - fee.amount;
 
-        fee.amount = amount;
         await student.save();
-        res.status(200).json({ message: "Fee updated" });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Server error" });
+        res.status(200).json({ message: "Fee updated successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error during edit", error: err.message });
     }
 };
 
-// ✅ GET FEES
-const getStudentFees = async (req, res) => {
+// ✅ GET STUDENT FEES
+export const getStudentFees = async (req, res) => {
     try {
         const student = await Student.findById(req.params.id);
-
-        if (!student) {
-            return res.status(404).json({ message: "Student not found" });
-        }
+        if (!student) return res.status(404).json({ message: "Student not found" });
 
         res.status(200).json({
             fees: student.fees || []
         });
-
-    } catch (error) {
-        console.log("GET FEES ERROR:", error);
-        res.status(500).json({ message: "Server error" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 };
-
-
-export { addFees, getStudentFees, getAllFees, deleteFee, editFee };
-   
