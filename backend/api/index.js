@@ -97,30 +97,40 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const app = express();
 
-// ✅ CORS: Modified to allow Electron's file:// protocol
+// ✅ Robust CORS: Dynamic origin handling for multiple domains
+const allowedOrigins = [
+  "http://localhost:3000", 
+  "http://localhost:5001",
+  "http://192.168.0.107:3000",
+  "https://sms-tinj.vercel.app",
+  "https://sms-xi-rose.vercel.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000", 
-    "http://localhost:5001",
-    "http://192.168.0.107:3000",
-    "https://sms-tinj.vercel.app",
-    "https://sms-xi-rose.vercel.app"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, or Electron local file loads)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('file://')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 
 app.use(express.json({ limit: '10mb' }));
 
 // ✅ OFFLINE LOGIC: Priority to Cloud, but fallback to Local for Offline use
 const MONGO_URI = process.env.MONGODB_LOCAL || "mongodb://127.0.0.1:27017/sms"; 
-// Note: If you have a cloud URI, you can check internet status or just try cloud first.
 
 const connectToDatabase = async () => {
   if (mongoose.connection.readyState >= 1) return;
   
   try {
-    // Try Cloud if available, else local
     const targetURI = process.env.MONGODB_CLOUD || MONGO_URI;
     await mongoose.connect(targetURI);
     console.log("✅ MongoDB Connected"); 
@@ -131,7 +141,6 @@ const connectToDatabase = async () => {
 
 connectToDatabase();
 
-// ✅ Static Files: Ensure path is relative to where the app is installed
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api", biometricRoutes);
