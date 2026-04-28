@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const AdmissionSchema = new mongoose.Schema({
     studentName: String,
@@ -12,4 +12,4 @@ const AdmissionSchema = new mongoose.Schema({
     annualFund: Number,
 }, { timestamps: true });
 
-module.exports = mongoose.model('Admission', AdmissionSchema);
+export default mongoose.model('Admission', AdmissionSchema);

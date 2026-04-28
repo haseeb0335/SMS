@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ExamFeeSchema = new mongoose.Schema({
     className: String,
@@ -6,4 +6,4 @@ const ExamFeeSchema = new mongoose.Schema({
     amount: Number,
 }, { timestamps: true });
 
-module.exports = mongoose.model('ExamFee', ExamFeeSchema);
+export default mongoose.model('ExamFee', ExamFeeSchema);

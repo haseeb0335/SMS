@@ -1,7 +1,7 @@
-const Admission = require('../models/Admission');
-const ExamFee = require('../models/ExamFee');
+import Admission from '../models/Admission.js';
+import ExamFee from '../models/ExamFee.js';
 
-const createAdmission = async (req, res) => {
+export const createAdmission = async (req, res) => {
     try {
         const newAdmission = new Admission(req.body);
         const savedAdmission = await newAdmission.save();
@@ -11,17 +11,17 @@ const createAdmission = async (req, res) => {
     }
 };
 
-const getAllAdmissions = async (req, res) => {
+export const getAllAdmissions = async (req, res) => {
     try {
         const admissions = await Admission.find().sort({ createdAt: -1 });
         res.status(200).json(admissions);
     } catch (error) {
-        console.error(error); // 👈 ADD THIS
+        console.error(error);
         res.status(500).json({ message: "Error fetching admissions", error });
     }
 };
 
-const updateAdmission = async (req, res) => {
+export const updateAdmission = async (req, res) => {
     try {
         const updatedAdmission = await Admission.findByIdAndUpdate(
             req.params.id,
@@ -34,7 +34,7 @@ const updateAdmission = async (req, res) => {
     }
 };
 
-const deleteAdmission = async (req, res) => {
+export const deleteAdmission = async (req, res) => {
     try {
         await Admission.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Admission record deleted successfully" });
@@ -42,7 +42,8 @@ const deleteAdmission = async (req, res) => {
         res.status(500).json({ message: "Error deleting record", error });
     }
 };
-const createExamFee = async (req, res) => {
+
+export const createExamFee = async (req, res) => {
     try {
         const newFee = new ExamFee(req.body);
         const savedFee = await newFee.save();
@@ -53,7 +54,7 @@ const createExamFee = async (req, res) => {
     }
 };
 
-const getAllExamFees = async (req, res) => {
+export const getAllExamFees = async (req, res) => {
     try {
         const fees = await ExamFee.find().sort({ className: 1 });
         res.status(200).json(fees);
@@ -62,7 +63,7 @@ const getAllExamFees = async (req, res) => {
     }
 };
 
-const deleteExamFee = async (req, res) => {
+export const deleteExamFee = async (req, res) => {
     try {
         await ExamFee.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Structure deleted successfully" });
@@ -70,7 +71,8 @@ const deleteExamFee = async (req, res) => {
         res.status(500).json({ message: "Error deleting structure", error });
     }
 };
-const updateExamFee = async (req, res) => {
+
+export const updateExamFee = async (req, res) => {
     try {
         const updatedFee = await ExamFee.findByIdAndUpdate(
             req.params.id,
@@ -81,16 +83,4 @@ const updateExamFee = async (req, res) => {
     } catch (error) {
         res.status(400).json({ message: "Error updating exam fee structure", error });
     }
-};
-
-
-module.exports = {
-    createAdmission,
-    getAllAdmissions,
-    updateAdmission,
-    deleteAdmission,
-    createExamFee,
-    getAllExamFees,
-    deleteExamFee,
-    updateExamFee
 };

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // ✅ Updated Fee Schema with your new fields
 const feeSchema = new mongoose.Schema({
@@ -99,4 +99,4 @@ const quizSchema = new mongoose.Schema({
 const Student = mongoose.model("student", studentSchema);
 const Quiz = mongoose.model("quiz", quizSchema);
 
-module.exports = { Student, Quiz };
+export { Student, Quiz };

@@ -1,5 +1,5 @@
 // FIX: Changed path from student_controller.js to studentSchema.js
-import Student from "../models/studentSchema.js"; 
+import { Student } from "../models/studentSchema.js";
 import Parent from "../models/parentSchema.js";
 import bcrypt from "bcrypt";
 

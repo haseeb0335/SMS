@@ -24,7 +24,7 @@ import {
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
-    : "http://localhost:5000";
+    : "http://localhost:5001";
 
 // LOGIN
 export const loginUser = (fields, role) => async (dispatch) => {

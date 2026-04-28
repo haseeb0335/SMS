@@ -1,16 +1,14 @@
-const { Student } = require("../models/studentSchema");
-const mongoose = require("mongoose");
+import { Student } from "../models/studentSchema.js";
+import mongoose from "mongoose";
 
 // ✅ COLLECT ANNUAL FUND
-const collectAnnualFund = async (req, res) => {
+export const collectAnnualFund = async (req, res) => {
     try {
         const { studentId, amount, date, feeMonth, receivedBy, fatherName } = req.body;
         
         const student = await Student.findById(studentId).populate("sclassName");
         if (!student) return res.status(404).json({ message: "Student not found" });
 
-        // Check if Annual Fund for this specific description (e.g., "Annual Fund 2026") 
-        // has already been paid to prevent duplicates
         const alreadyPaid = student.fees.find(f => f.feeMonth === feeMonth);
         if (alreadyPaid) {
             return res.status(400).json({ message: `Annual Fund (${feeMonth}) already paid for this student.` });
@@ -23,11 +21,11 @@ const collectAnnualFund = async (req, res) => {
             studentName: student.name,
             className: student.sclassName?.sclassName || "No Class",
             fatherName: fatherName || student.fatherName || "-",
-            feeMonth: feeMonth, // Used as the Fund Title (e.g., "Annual Fund 2026")
+            feeMonth: feeMonth, 
             previousDues: Number(amount),
-            totalDues: 0, // Annual funds are usually one-time full payments
+            totalDues: 0, 
             receivedBy: receivedBy || "Admin",
-            category: "AnnualFund" // Add this to distinguish from monthly fees
+            category: "AnnualFund" 
         };
 
         student.fees.push(newFundRecord);
@@ -41,13 +39,13 @@ const collectAnnualFund = async (req, res) => {
 };
 
 // ✅ GET ANNUAL FUND RECORDS ONLY
-const getAnnualFundRecords = async (req, res) => {
+export const getAnnualFundRecords = async (req, res) => {
     try {
         const students = await Student.find().populate("sclassName");
         let fundCollections = [];
 
         students.forEach(student => {
-            const funds = student.fees.filter(f => f.feeMonth.toLowerCase().includes("fund"));
+            const funds = student.fees.filter(f => f.feeMonth && f.feeMonth.toLowerCase().includes("fund"));
             funds.forEach(f => {
                 fundCollections.push({
                     ...f.toObject(),
@@ -62,20 +60,19 @@ const getAnnualFundRecords = async (req, res) => {
         res.status(500).json({ message: "Error fetching fund records" });
     }
 };
+
 // ✅ EDIT ANNUAL FUND RECORD
-const editAnnualFund = async (req, res) => {
+export const editAnnualFund = async (req, res) => {
     try {
-        const { id } = req.params; // This is the unique Fee ID (_id)
+        const { id } = req.params; 
         const { amount, fatherName, collectorName, feeMonth, date } = req.body;
 
-        // Find the student who contains this specific fee ID
         const student = await Student.findOne({ "fees._id": id });
 
         if (!student) {
             return res.status(404).json({ message: "Record not found" });
         }
 
-        // Find the specific fee object within the array
         const fee = student.fees.id(id);
         
         if (fee) {
@@ -84,8 +81,6 @@ const editAnnualFund = async (req, res) => {
             fee.collectorName = collectorName || fee.collectorName;
             fee.feeMonth = feeMonth || fee.feeMonth;
             fee.date = date || fee.date;
-            
-            // Re-calculate totalDues if necessary for your logic
             fee.totalDues = (fee.previousDues || 0) - fee.amount;
         }
 
@@ -96,4 +91,3 @@ const editAnnualFund = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-module.exports = { collectAnnualFund, getAnnualFundRecords, editAnnualFund };

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose";
 
 const adminSchema = new mongoose.Schema({
     name: {
@@ -14,7 +14,7 @@ const adminSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-     profilePic: {
+    profilePic: {
         type: String,
         default: ""
     },
@@ -29,4 +29,4 @@ const adminSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("admin", adminSchema)
+export default mongoose.model("Admin", adminSchema);

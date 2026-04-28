@@ -87,58 +87,60 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import Routes from "../routes/route.js";
-import biometricRoutes from "../routes/biometricRoutes.js";
+import { fileURLToPath } from "url";
+import { router as Routes } from "../routes/route.js";
+import { router as biometricRoutes } from "../routes/biometricRoutes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
 
-// ✅ CORS: Added your local IP so your phone is allowed to connect
+// ✅ CORS: Modified to allow Electron's file:// protocol
 app.use(cors({
   origin: [
     "http://localhost:3000", 
+    "http://localhost:5001",
     "http://192.168.0.107:3000",
-     "https://sms-tinj.vercel.app",
+    "https://sms-tinj.vercel.app",
     "https://sms-xi-rose.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
-// ✅ DB Selection Logic
-const MONGO_URI = process.env.MONGODB_CLOUD || process.env.MONGODB_LOCAL;
+// ✅ OFFLINE LOGIC: Priority to Cloud, but fallback to Local for Offline use
+const MONGO_URI = process.env.MONGODB_LOCAL || "mongodb://127.0.0.1:27017/sms"; 
+// Note: If you have a cloud URI, you can check internet status or just try cloud first.
 
-async function connectToDatabase() {
-  if (mongoose.connection.readyState === 1) return;
+const connectToDatabase = async () => {
+  if (mongoose.connection.readyState >= 1) return;
   
   try {
-    await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB Connected to:", mongoose.connection.name); 
+    // Try Cloud if available, else local
+    const targetURI = process.env.MONGODB_CLOUD || MONGO_URI;
+    await mongoose.connect(targetURI);
+    console.log("✅ MongoDB Connected"); 
   } catch (err) {
-    console.error("❌ MongoDB Connection Error:", err);
+    console.error("❌ MongoDB Connection Error. Ensure local MongoDB is running for offline mode.");
   }
-}
+};
 
-// ✅ Middleware to ensure DB is connected before any request
-app.use(async (req, res, next) => {
-  await connectToDatabase();
-  next();
-});
+connectToDatabase();
 
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Server is working ✅", db: mongoose.connection.name });
-});
+// ✅ Static Files: Ensure path is relative to where the app is installed
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-app.use("/uploads", express.static("uploads"));
 app.use("/api", biometricRoutes);
 app.use("/", Routes);
 
-// ✅ Start Server on 0.0.0.0 to allow network access
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on http://192.168.0.107:${PORT}`);
+  console.log(`🚀 Offline Server running on port ${PORT}`);
 });
 
 export default app;

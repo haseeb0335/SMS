@@ -1,5 +1,5 @@
-const { Student } = require("../models/studentSchema");
-const mongoose = require("mongoose");
+import { Student } from "../models/studentSchema.js";
+import mongoose from 'mongoose';
 
 // ✅ ADD FEE
 const addFees = async (req, res) => {
@@ -162,11 +162,5 @@ const getStudentFees = async (req, res) => {
 };
 
 
-module.exports = {
-    addFees,
-    getStudentFees, 
-    getAllFees, 
-    deleteFee,
-    editFee,
+export { addFees, getStudentFees, getAllFees, deleteFee, editFee };
    
-};
