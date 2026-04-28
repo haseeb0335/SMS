@@ -3,6 +3,7 @@ import Teacher from "../models/teacherSchema.js";
 import Subject from '../models/subjectSchema.js';
 import Sclass from '../models/sclassSchema.js'; // MUST BE HERE
 import School from '../models/adminSchema.js';
+import mongoose from 'mongoose';
 
 export const teacherRegister = async (req, res) => {
     const { name, email, password, role, school, teachSubject, teachSclass } = req.body;
@@ -50,51 +51,94 @@ export const teacherLogIn = async (req, res) => {
     }
 };
 
-export const getTeachers = async (req, res) => {
+export const getAllTeachers = async (req, res) => {
     try {
-        let teachers = await Teacher.find({
-            school: req.params.id 
-        })
-            .populate("teachSubject", "subName")
-            .populate("teachSclass", "sclassName");
+        console.log("School ID:", req.params.id);
 
-        res.send(teachers);
+        const teachers = await Teacher.find({
+            school: req.params.id
+        });
+
+        console.log("Teachers Found:", teachers);
+
+        res.status(200).json(teachers);
+
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET ALL TEACHERS ERROR:", err);
+        res.status(500).json({
+            message: "Server Error",
+            error: err.message
+        });
     }
 };
 
 export const getTeachersByClass = async (req, res) => {
     try {
-        const teachers = await Teacher.find({
-            teachSclass: req.params.id
-        })
-        .populate("teachSubject", "subName")
-        .populate("teachSclass", "sclassName");
+        const { id } = req.params;
 
-        res.send(teachers);
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid Class ID format" });
+        }
+
+        // We explicitly tell Mongoose to use the "sclass" model 
+        // by passing it as an object if a string fails
+        const teachers = await Teacher.find({ teachSclass: id })
+            .populate({
+                path: "teachSclass",
+                model: "sclass", // Explicitly use the lowercase name from your schema
+                select: "sclassName"
+            })
+            .populate({
+                path: "teachSubject",
+                model: "Subject", // Ensure this matches your subject schema name
+                select: "subName"
+            })
+            .lean();
+
+        if (!teachers) return res.status(200).json([]);
+
+        const sanitizedTeachers = teachers.map(teacher => {
+            const { password, ...details } = teacher;
+            return details;
+        });
+
+        res.status(200).json(sanitizedTeachers);
+
     } catch (err) {
-        res.status(500).json(err);
+        console.error("SERVER CRASH DETAILS:", err); // Look at your terminal for this!
+        res.status(500).json({ message: err.message });
     }
 };
 
 export const getTeacherDetail = async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.params.id)
-      .populate("teachSubject", "subName sessions")
-      .populate("school", "schoolName")
-      .populate("teachSclass", "sclassName");
+      .populate({
+        path: "teachSubject",
+        model: "Subject" // Ensure subjectSchema uses mongoose.model("Subject",...)
+      })
+      .populate({
+        path: "school",
+        model: "Admin" // MATCHES YOUR adminSchema.js EXPORT (Capital A)
+      })
+      .populate({
+        path: "teachSclass",
+        model: "sclass" // MATCHES YOUR sclassSchema.js EXPORT (Lowercase s)
+      });
 
     if (!teacher) {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
-    teacher.password = undefined;
-    res.status(200).json(teacher);
+    const teacherData = teacher.toObject();
+    teacherData.password = undefined;
+    
+    res.status(200).json(teacherData);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    // Check your terminal for this message if it still fails!
+    console.error("POPULATION ERROR:", err.message);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
 };
 
@@ -282,3 +326,4 @@ export const deleteTeacherAttendance = async (req, res) => {
     res.status(500).json(err);
   }
 };
+

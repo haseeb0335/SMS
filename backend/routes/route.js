@@ -36,7 +36,7 @@ import {
     removeStudentAttendance
 } from '../controllers/student_controller.js';
 import { subjectCreate, classSubjects, deleteSubjectsByClass, getSubjectDetail, deleteSubject, freeSubjectList, allSubjects, deleteSubjects } from '../controllers/subject-controller.js';
-import { teacherRegister, teacherLogIn, getTeachers, getTeachersByClass, getTeacherAttendance, getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubject, teacherAttendance, updateTeacher, deleteTeacherAttendance, removeTeacherAttendance } from '../controllers/teacher-controller.js';
+import { teacherRegister, teacherLogIn, getAllTeachers, getTeachersByClass, getTeacherAttendance, getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubject, teacherAttendance, updateTeacher, deleteTeacherAttendance, removeTeacherAttendance } from '../controllers/teacher-controller.js';
 import { addFees, getStudentFees, getAllFees, deleteFee, editFee } from "../controllers/Fees-controller.js";
 import { addExpense, getExpenses, deleteExpense, updateExpense } from '../controllers/expense-controller.js';
 import { createAdmission, getAllAdmissions, updateAdmission, deleteAdmission, createExamFee, getAllExamFees, updateExamFee, deleteExamFee } from '../controllers/admissionController.js';
@@ -131,7 +131,7 @@ router.delete('/DeleteTeacherAttendance/:teacherId/:attenId', deleteTeacherAtten
 router.post('/TeacherReg', teacherRegister);
 router.post('/TeacherLogin', teacherLogIn);
 router.get('/TeacherAttendance/:id', getTeacherAttendance);
-router.get("/Teachers/:id", getTeachers);
+router.get("/Teachers/:id", getAllTeachers);
 router.get("/TeachersClass/:id", getTeachersByClass);
 router.get("/Teacher/:id", getTeacherDetail);
 router.delete("/Teachers/:id", deleteTeachers);

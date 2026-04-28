@@ -75,10 +75,9 @@ export const logoutUser = () => (dispatch) => {
 
 // GET USER
 export const getUserDetails = (id, address) => async (dispatch) => {
-
     dispatch(getRequest());
-
     try {
+        // address will be "Student" and id will be the studentID
         const result = await axios.get(`${BASE_URL}/${address}/${id}`);
         dispatch(doneSuccess(result.data));
     } catch (error) {

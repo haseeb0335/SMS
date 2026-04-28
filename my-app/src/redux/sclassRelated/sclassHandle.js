@@ -17,7 +17,7 @@ import {
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
-    : "http://192.168.0.107:5001";
+    : "http://localhost:5001";
 
 export const getAllSclasses = (id, address) => async (dispatch) => {
     dispatch(getRequest());

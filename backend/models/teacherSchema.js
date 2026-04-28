@@ -23,20 +23,23 @@ const teacherSchema = new mongoose.Schema({
     default: "Teacher"
   },
 
+  // ✅ FIXED HERE
   school: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "admin",
+    ref: "Admin",
     required: true
   },
 
+  // ✅ FIXED HERE
   teachSubject: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "subject"
+    ref: "Subject"
   },
 
+  // ✅ FIXED HERE
   teachSclass: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "sclass",
+    ref: "Sclass",
     required: true
   },
 
@@ -70,7 +73,6 @@ const teacherSchema = new mongoose.Schema({
         latitude: Number,
         longitude: Number
       }
-
     }
   ]
 

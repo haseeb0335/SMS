@@ -98,18 +98,38 @@ export const getClassStudents = async (req, res) => {
 export const getStudentDetail = async (req, res) => {
     try {
         let student = await Student.findById(req.params.id)
-            .populate("school", "schoolName")
-            .populate("sclassName", "sclassName")
-            .populate("examResult.subName", "subName")
-            .populate("attendance.subName", "subName sessions");
+            .populate({
+                path: "school",
+                model: "Admin", // Match your adminSchema.js export (Capital A)
+                select: "schoolName"
+            })
+            .populate({
+                path: "sclassName",
+                model: "sclass", // Match your sclassSchema.js export (lowercase s)
+                select: "sclassName"
+            })
+            .populate({
+                path: "examResult.subName",
+                model: "Subject", // Match your subject model name
+                select: "subName"
+            })
+            .populate({
+                path: "attendance.subName",
+                model: "Subject", // Match your subject model name
+                select: "subName sessions"
+            });
+
         if (student) {
-            student.password = undefined;
-            res.send(student);
+            // Convert to object to safely remove password
+            const studentData = student.toObject();
+            delete studentData.password;
+            res.status(200).send(studentData);
         } else {
-            res.send({ message: "No student found" });
+            res.status(404).send({ message: "No student found" });
         }
     } catch (err) {
-        res.status(500).json(err);
+        console.error("STUDENT DETAIL ERROR:", err.message);
+        res.status(500).json({ message: "Server Error", error: err.message });
     }
 };
 

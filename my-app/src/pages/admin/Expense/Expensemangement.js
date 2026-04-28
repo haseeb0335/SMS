@@ -21,7 +21,7 @@ import autoTable from 'jspdf-autotable'; // Import autoTable directly
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
-    : "http://192.168.0.107:5000";
+    : "http://localhost:5001";
 
 const categories = ['Utilities', 'Salaries', 'Maintenance', 'Stationery', 'Events', 'Other'];
 

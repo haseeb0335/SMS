@@ -20,10 +20,14 @@ export const getTeachersByClass = (id) => async (dispatch) => {
 
     try {
         const result = await axios.get(`${BASE_URL}/TeachersClass/${id}`);
-        if (result.data.message) {
+        // If result.data is an array (even empty), it's a success
+        if (Array.isArray(result.data)) {
+            dispatch(getSuccess(result.data));
+        } else if (result.data.message) {
+            // Only fail if there is an explicit error message
             dispatch(getFailed(result.data.message));
         } else {
-            dispatch(getSuccess(result.data));
+            dispatch(getSuccess([]));
         }
     } catch (error) {
         dispatch(getError(error.message));
@@ -35,10 +39,10 @@ export const getAllTeachers = (id) => async (dispatch) => {
 
     try {
         const result = await axios.get(`${BASE_URL}/Teachers/${id}`);
-        if (result.data.message) {
-            dispatch(getFailed(result.data.message));
-        } else {
+        if (Array.isArray(result.data)) {
             dispatch(getSuccess(result.data));
+        } else {
+            dispatch(getFailed("Could not fetch teachers list"));
         }
     } catch (error) {
         dispatch(getError(error.message));
@@ -64,11 +68,18 @@ export const getTeacherDetails = (id) => async (dispatch) => {
 
     try {
         const result = await axios.get(`${BASE_URL}/Teacher/${id}`);
-        if (result.data) {
+        
+        // Ensure data exists and doesn't contain a manual error message
+        if (result.data && !result.data.message) {
             dispatch(doneSuccess(result.data));
+        } else {
+            // This handles cases where you might send res.send({message: "..."})
+            dispatch(getFailed(result.data.message || "Failed to load details"));
         }
     } catch (error) {
-        dispatch(getError(error.message));
+        // This catches the 500 error and displays it in Redux state
+        const errorMsg = error.response?.data?.message || error.message;
+        dispatch(getError(errorMsg));
     }
 }
 

@@ -15,7 +15,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 const BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://sms-xi-rose.vercel.app"
-    : "http://192.168.0.107:5000";
+    : "http://localhost:5001";
 
 function StudentAttendance() {
   const [attendanceFeed, setAttendanceFeed] = useState([]);

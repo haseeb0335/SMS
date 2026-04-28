@@ -41,15 +41,20 @@ export const sclassList = async (req, res) => {
 
 export const getSclassDetail = async (req, res) => {
     try {
-        let sclass = await Sclass.findById(req.params.id);
-        if (sclass) {
-            sclass = await sclass.populate("school", "schoolName");
-            res.send(sclass);
-        } else {
-            res.send({ message: "No class found" });
+        const sclass = await Sclass.findById(req.params.id);
+
+        if (!sclass) {
+            return res.send({ message: "No class found" });
         }
+
+        res.send(sclass);
+
     } catch (err) {
-        res.status(500).json(err);
+        console.log("getSclassDetail Error:", err);
+        res.status(500).json({
+            message: "Server Error",
+            error: err.message
+        });
     }
 };
 
