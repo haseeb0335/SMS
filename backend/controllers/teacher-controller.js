@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import Teacher from "../models/teacherSchema.js";
 import Subject from '../models/subjectSchema.js';
+import Sclass from '../models/sclassSchema.js'; // MUST BE HERE
+import School from '../models/schoolSchema.js';
 
 export const teacherRegister = async (req, res) => {
     const { name, email, password, role, school, teachSubject, teachSclass } = req.body;
