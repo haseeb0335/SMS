@@ -1,6 +1,6 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const { spawn } = require('child_process');
+const { app, BrowserWindow } = require("electron");
+const path = require("path");
+const { spawn } = require("child_process");
 
 let mainWindow;
 let backendProcess;
@@ -10,38 +10,60 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: false, // Security best practice
+      nodeIntegration: false,
       contextIsolation: true,
     },
   });
 
-  // For offline mode, we load the production build of your React app
-  // Ensure your React "build" folder is copied into the backend directory
-  mainWindow.loadFile(path.join(__dirname, 'build/index.html'));
+  const startUrl = path.join(__dirname, "build/index.html");
+  console.log("Loading React Build From:", startUrl);
 
-  mainWindow.on('closed', function () {
+  mainWindow.loadFile(startUrl);
+
+  mainWindow.on("closed", () => {
     mainWindow = null;
-    // Kill the backend process when the window closes so the port is released
-    if (backendProcess) backendProcess.kill();
+
+    if (backendProcess) {
+      backendProcess.kill();
+    }
   });
 }
 
 app.whenReady().then(() => {
-  // ✅ IMPORTANT: Start the backend using the relative path to your index.js
-  backendProcess = spawn('node', [path.join(__dirname, 'api/index.js')], {
-    shell: true,
-    env: { ...process.env, NODE_ENV: 'production' }
+  const backendPath = path.join(__dirname, "api/index.js");
+  console.log("Backend Path:", backendPath);
+
+  backendProcess = spawn(
+    process.execPath,
+    [backendPath],
+    {
+      shell: false,
+      env: {
+        ...process.env,
+        NODE_ENV: "production",
+      },
+    }
+  );
+
+  backendProcess.stdout.on("data", (data) => {
+    console.log(`Backend: ${data}`);
   });
 
-  backendProcess.stdout.on('data', (data) => console.log(`Backend: ${data}`));
-  backendProcess.stderr.on('data', (data) => console.error(`Backend Error: ${data}`));
+  backendProcess.stderr.on("data", (data) => {
+    console.error(`Backend Error: ${data}`);
+  });
 
-  createWindow();
+  // small delay so backend starts first
+  setTimeout(() => {
+    createWindow();
+  }, 3000);
 });
 
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') {
-    if (backendProcess) backendProcess.kill();
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    if (backendProcess) {
+      backendProcess.kill();
+    }
     app.quit();
   }
 });

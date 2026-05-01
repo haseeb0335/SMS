@@ -13,10 +13,7 @@ import {
     Delete as DeleteIcon 
 } from "@mui/icons-material";
 
-const BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://sms-xi-rose.vercel.app"
-    : "http://192.168.0.107:5000";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const ParentApplyLeave = () => {
     const { currentUser } = useSelector((state) => state.user);

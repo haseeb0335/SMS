@@ -13,11 +13,8 @@ import {
 } from './sclassSlice';
 
 // const BASE_URL = "http://localhost:5000";
-// const BASE_URL = "https://sms-xi-rose.vercel.app";
-const BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://sms-xi-rose.vercel.app"
-    : "http://localhost:5001";
+ const BASE_URL = "https://sms-xi-rose.vercel.app";
+
 
 export const getAllSclasses = (id, address) => async (dispatch) => {
     dispatch(getRequest());

@@ -32,10 +32,7 @@ import {
     Tooltip, PieChart, Pie, Cell, Legend
 } from "recharts";
 
-const BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://sms-xi-rose.vercel.app"
-    : "http://192.168.0.107:5000";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 // Inlined Styled Components to fix the "outside of src" error
 const StyledTableCell = styled(TableCell)(({ theme }) => ({

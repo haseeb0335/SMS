@@ -1,5 +1,6 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+// CHANGE: Import HashRouter instead of BrowserRouter
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import Homepage from './pages/Homepage';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -15,6 +16,9 @@ const App = () => {
   const { currentRole } = useSelector(state => state.user);
 
   return (
+    // This will now work with the file:// protocol
+
+    
     <Router>
       {currentRole === null &&
         <Routes>
@@ -30,8 +34,7 @@ const App = () => {
           <Route path="/Parent/dashboard" element={<ParentDashboard />} />
 
           <Route path="/Adminregister" element={<AdminRegisterPage />} />
-         
-
+          
           <Route path='*' element={<Navigate to="/" />} />
         </Routes>}
 
@@ -47,20 +50,20 @@ const App = () => {
         </>
       }
 
-  {currentRole === "Teacher" &&
-    <>
-      <TeacherDashboard />
-    </>
-  }
+      {currentRole === "Teacher" &&
+        <>
+          <TeacherDashboard />
+        </>
+      }
 
-{currentRole === "Parent" &&
+      {currentRole === "Parent" &&
         <Routes>
-          {/* The /* allows the ParentDashboard to handle sub-navigation */}
+          {/* Note: HashRouter handles the /* wildcards better for nested electron routes */}
           <Route path="/Parent/dashboard/*" element={<ParentDashboard />} />
           <Route path='*' element={<Navigate to="/Parent/dashboard" />} />
         </Routes>
       }
-</Router>
+    </Router>
   )
 }
 

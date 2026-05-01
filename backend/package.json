@@ -1,18 +1,13 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "School Management System - Desktop & Web",
   "main": "main.cjs",
   "type": "module",
   "scripts": {
     "start": "nodemon api/index.js",
-    "build": "npm i",
-    "vercel-start": "node api/index.js",
     "electron:dev": "electron .",
     "electron:build": "electron-builder build --win --publish never"
   },
-  "author": "Haseeb Ahmed",
-  "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "bcrypt": "^5.1.1",
@@ -33,30 +28,33 @@
   "build": {
     "appId": "com.haseeb.smsproject",
     "productName": "School Management System",
-    "directories": {
-      "output": "dist"
-    },
+    "files": [
+      "api/**/*",
+      "controllers/**/*",
+      "models/**/*",
+      "routes/**/*",
+      "main.cjs",
+      "package.json",
+      ".env",
+     {
+  "from": "../my-app/build",
+  "to": "build",
+  "filter": ["**/*"]
+}
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/bcrypt/**/*"
+    ],
     "win": {
-  "target": ["nsis"],
-  "cscLink": null,
-  "verifyUpdateCodeSignature": false
-},
+      "target": ["nsis"],
       "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "School Management System"
-    },
-    "files": [
-      "api/**/*",
-      "models/**/*",
-      "routes/**/*",
-      "uploads/**/*",
-      "main.cjs",
-      "package.json",
-      "node_modules/**/*"
-    ]
+      "createStartMenuShortcut": true
+    }
   }
+}

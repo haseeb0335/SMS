@@ -2,10 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Box, Typography, Paper, Button, Radio, RadioGroup, FormControlLabel, Divider, Alert } from "@mui/material";
 
-const BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://sms-xi-rose.vercel.app"
-    : "http://localhost:5001";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 function StudentQuizPage() {
   const user = JSON.parse(localStorage.getItem("user"));

@@ -39,12 +39,9 @@ import {
 import CustomBarChart from '../../../components/CustomBarChart';
 import { StyledTableCell, StyledTableRow } from '../../../components/styles';
 
-// const BASE_URL = "https://sms-xi-rose.vercel.app";
+ const BASE_URL = "https://sms-xi-rose.vercel.app";
 
-const BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://sms-xi-rose.vercel.app"
-    : "http://localhost:5001";
+
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
