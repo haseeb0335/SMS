@@ -20,7 +20,10 @@ app.use(cors({
     "http://localhost:5001",
     "http://192.168.0.107:3000",
     "https://sms-tinj.vercel.app",
-    "https://sms-xi-rose.vercel.app"
+    "https://sms-xi-rose.vercel.app",
+    "capacitor://sms-xi-rose.vercel.app",
+    "capacitor://sms-tinj.vercel.app",
+    "capacitor://localhost"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
