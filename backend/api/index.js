@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const app = express();
 
-// ✅ CORS: Modified to allow Electron's file:// protocol
+// ✅ CORS: Updated to include the specific origin identified in Chrome DevTools
 app.use(cors({
   origin: [
     "http://localhost:3000", 
@@ -21,14 +21,13 @@ app.use(cors({
     "http://192.168.0.107:3000",
     "https://sms-tinj.vercel.app",
     "https://sms-xi-rose.vercel.app",
-    "capacitor://sms-xi-rose.vercel.app",
-    "capacitor://sms-tinj.vercel.app",
-    "capacitor://localhost"
+    "https://localhost",        // 👈 CRITICAL: Added based on your console error
+    "capacitor://localhost",
+    "http://10.0.2.2"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // 👈 Added OPTIONS for the preflight check
   credentials: true
 }));
-
 app.use(express.json({ limit: '10mb' }));
 
 // ✅ OFFLINE LOGIC: Priority to Cloud, but fallback to Local for Offline use
