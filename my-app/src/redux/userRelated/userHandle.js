@@ -36,9 +36,15 @@ export const loginUser = (fields, role) => async (dispatch) => {
         }
 
     } catch (error) {
-        dispatch(authError(error.message));
-    }
-};
+    console.log("FULL LOGIN ERROR:", error);
+    console.log("SERVER RESPONSE:", error.response?.data);
+
+    dispatch(
+        authError(
+            error.response?.data?.message || error.message
+        )
+    )
+}}
 
 
 // REGISTER

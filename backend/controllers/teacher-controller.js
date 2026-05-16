@@ -31,23 +31,55 @@ export const teacherRegister = async (req, res) => {
 
 export const teacherLogIn = async (req, res) => {
     try {
-        let teacher = await Teacher.findOne({ email: req.body.email });
-        if (teacher) {
-            const validated = await bcrypt.compare(req.body.password, teacher.password);
-            if (validated) {
-                teacher = await teacher.populate("teachSubject", "subName sessions")
-                teacher = await teacher.populate("school", "schoolName")
-                teacher = await teacher.populate("teachSclass", "sclassName")
-                teacher.password = undefined;
-                res.send(teacher);
-            } else {
-                res.send({ message: "Invalid password" });
-            }
-        } else {
-            res.send({ message: "Teacher not found" });
+        console.log("LOGIN REQUEST BODY:", req.body);
+
+        let teacher = await Teacher.findOne({
+            email: req.body.email
+        });
+
+        console.log("FOUND TEACHER:", teacher);
+
+        if (!teacher) {
+            return res.status(404).json({
+                message: "Teacher not found"
+            });
         }
+
+        if (!teacher.password) {
+            return res.status(400).json({
+                message: "Password missing in DB"
+            });
+        }
+
+        console.log("PASSWORD EXISTS");
+
+        const validated = await bcrypt.compare(
+            req.body.password,
+            teacher.password
+        );
+
+        console.log("PASSWORD MATCH:", validated);
+
+        if (!validated) {
+            return res.status(400).json({
+                message: "Invalid password"
+            });
+        }
+
+        // TEMPORARILY REMOVE populate()
+        // to isolate the issue
+
+        teacher.password = undefined;
+
+        return res.status(200).json(teacher);
+
     } catch (err) {
-        res.status(500).json(err);
+        console.error("TEACHER LOGIN FULL ERROR:", err);
+
+        return res.status(500).json({
+            message: err.message,
+            stack: err.stack
+        });
     }
 };
 
