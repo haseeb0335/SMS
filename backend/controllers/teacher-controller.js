@@ -31,13 +31,9 @@ export const teacherRegister = async (req, res) => {
 
 export const teacherLogIn = async (req, res) => {
     try {
-        console.log("LOGIN REQUEST BODY:", req.body);
-
         let teacher = await Teacher.findOne({
             email: req.body.email
         });
-
-        console.log("FOUND TEACHER:", teacher);
 
         if (!teacher) {
             return res.status(404).json({
@@ -45,20 +41,10 @@ export const teacherLogIn = async (req, res) => {
             });
         }
 
-        if (!teacher.password) {
-            return res.status(400).json({
-                message: "Password missing in DB"
-            });
-        }
-
-        console.log("PASSWORD EXISTS");
-
         const validated = await bcrypt.compare(
             req.body.password,
             teacher.password
         );
-
-        console.log("PASSWORD MATCH:", validated);
 
         if (!validated) {
             return res.status(400).json({
@@ -66,19 +52,33 @@ export const teacherLogIn = async (req, res) => {
             });
         }
 
-        // TEMPORARILY REMOVE populate()
-        // to isolate the issue
+        teacher = await teacher.populate({
+            path: "teachSubject",
+            model: "Subject",
+            select: "subName sessions"
+        });
+
+        teacher = await teacher.populate({
+            path: "school",
+            model: "Admin",
+            select: "schoolName"
+        });
+
+        teacher = await teacher.populate({
+            path: "teachSclass",
+            model: "sclass",
+            select: "sclassName"
+        });
 
         teacher.password = undefined;
 
         return res.status(200).json(teacher);
 
     } catch (err) {
-        console.error("TEACHER LOGIN FULL ERROR:", err);
+        console.error("Teacher Login Error:", err);
 
         return res.status(500).json({
-            message: err.message,
-            stack: err.stack
+            message: err.message
         });
     }
 };
