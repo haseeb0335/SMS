@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
 import {
   Grid,
   Paper,
@@ -10,7 +11,6 @@ import {
   Typography,
 } from '@mui/material';
 import { AccountCircle, School, Group, FamilyRestroom } from '@mui/icons-material';
-import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/userRelated/userHandle';
 import Popup from '../components/Popup';
@@ -86,64 +86,64 @@ const ChooseUser = ({ visitor }) => {
   }, [status, currentRole, navigate, currentUser]);
 
   return (
-    <StyledContainer>
+    <StyledWrapperContainer>
       <Container maxWidth="lg">
-        <HeaderSection>
-          <Title>Welcome to School System</Title>
-          <Subtitle>Please select your user type to continue</Subtitle>
-        </HeaderSection>
+        <HeaderSectionBox>
+          <Typography className="title-text">Welcome to School System</Typography>
+          <Typography className="subtitle-text">Please select your user type to continue</Typography>
+        </HeaderSectionBox>
 
-        <Grid container spacing={4} justifyContent="center">
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
           {/* Admin Card */}
           <Grid item xs={12} sm={6} md={3}>
-            <StyledPaper elevation={0} onClick={() => navigateHandler("Admin")}>
+            <StyledActionPaper elevation={0} onClick={() => navigateHandler("Admin")}>
               <Box className="icon-wrapper">
                 <AccountCircle />
               </Box>
-              <StyledTypography>Admin</StyledTypography>
-              <Description>
+              <Typography variant="h5" className="card-heading">Admin</Typography>
+              <Typography className="card-description">
                 Manage school data, staff, and overall system configuration.
-              </Description>
-            </StyledPaper>
+              </Typography>
+            </StyledActionPaper>
           </Grid>
 
           {/* Student Card */}
           <Grid item xs={12} sm={6} md={3}>
-            <StyledPaper elevation={0} onClick={() => navigateHandler("Student")}>
+            <StyledActionPaper elevation={0} onClick={() => navigateHandler("Student")}>
               <Box className="icon-wrapper">
                 <School />
               </Box>
-              <StyledTypography>Student</StyledTypography>
-              <Description>
+              <Typography variant="h5" className="card-heading">Student</Typography>
+              <Typography className="card-description">
                 Access your courses, view assignments, and track your grades.
-              </Description>
-            </StyledPaper>
+              </Typography>
+            </StyledActionPaper>
           </Grid>
 
           {/* Teacher Card */}
           <Grid item xs={12} sm={6} md={3}>
-            <StyledPaper elevation={0} onClick={() => navigateHandler("Teacher")}>
+            <StyledActionPaper elevation={0} onClick={() => navigateHandler("Teacher")}>
               <Box className="icon-wrapper">
                 <Group />
               </Box>
-              <StyledTypography>Teacher</StyledTypography>
-              <Description>
+              <Typography variant="h5" className="card-heading">Teacher</Typography>
+              <Typography className="card-description">
                 Manage your classes, mark attendance, and upload materials.
-              </Description>
-            </StyledPaper>
+              </Typography>
+            </StyledActionPaper>
           </Grid>
 
           {/* Parent Card */}
           <Grid item xs={12} sm={6} md={3}>
-            <StyledPaper elevation={0} onClick={() => navigateHandler("Parent")}>
+            <StyledActionPaper elevation={0} onClick={() => navigateHandler("Parent")}>
               <Box className="icon-wrapper">
                 <FamilyRestroom />
               </Box>
-              <StyledTypography>Parent</StyledTypography>
-              <Description>
+              <Typography variant="h5" className="card-heading">Parent</Typography>
+              <Typography className="card-description">
                 Monitor your child's academic progress and attendance reports.
-              </Description>
-            </StyledPaper>
+              </Typography>
+            </StyledActionPaper>
           </Grid>
         </Grid>
       </Container>
@@ -152,110 +152,130 @@ const ChooseUser = ({ visitor }) => {
         sx={{ 
             color: '#fff', 
             zIndex: (theme) => theme.zIndex.drawer + 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: 'rgba(2, 6, 23, 0.9)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             flexDirection: 'column',
             gap: 2
         }}
         open={loader}
       >
-        <CircularProgress color="inherit" thickness={4} size={50} />
-        <Typography variant="h6" sx={{ letterSpacing: '1px' }}>Authenticating...</Typography>
+        <CircularProgress color="primary" thickness={4.5} size={50} sx={{ color: '#7c3aed' }} />
+        <Typography variant="h6" sx={{ letterSpacing: '0.5px', fontWeight: 600 }}>Authenticating...</Typography>
       </Backdrop>
       
       <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-    </StyledContainer>
+    </StyledWrapperContainer>
   );
 };
 
 export default ChooseUser;
 
-/* --- MODERN STYLES --- */
+/* --- MODERN SYSTEM NATIVE HOISTED CORE ARCHITECTURE OVERRIDES --- */
 
-const StyledContainer = styled.div`
-  background: radial-gradient(circle at 20% 20%, #2e1065 0%, #020617 100%);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  font-family: 'Inter', sans-serif;
-`;
+const StyledWrapperContainer = styled(Box)(({ theme }) => ({
+  background: 'radial-gradient(circle at 50% 10%, #1e1b4b 0%, #020617 100%)',
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '4rem 2rem',
+  [theme.breakpoints.down('sm')]: {
+    padding: '2.5rem 1.25rem',
+  },
+}));
 
-const HeaderSection = styled.div`
-  text-align: center;
-  margin-bottom: 3rem;
-`;
+const HeaderSectionBox = styled(Box)(({ theme }) => ({
+  textAlign: 'center',
+  marginBottom: '4rem',
+  [theme.breakpoints.down('sm')]: {
+    marginBottom: '2.5rem',
+  },
+  '& .title-text': {
+    color: '#ffffff',
+    fontSize: '2.75rem',
+    fontWeight: 900,
+    letterSpacing: '-1px',
+    lineHeight: 1.2,
+    marginBottom: '0.75rem',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '2rem',
+    },
+  },
+  '& .subtitle-text': {
+    color: '#94a3b8',
+    fontSize: '1.15rem',
+    fontWeight: 500,
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '1rem',
+    },
+  },
+}));
 
-const Title = styled.h1`
-  color: #ffffff;
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 800;
-  letter-spacing: -1px;
-`;
+const StyledActionPaper = styled(Paper)(({ theme }) => ({
+  padding: '40px 24px',
+  textAlign: 'center',
+  background: 'rgba(255, 255, 255, 0.02) !important',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 255, 255, 0.08) !important',
+  borderRadius: '28px !important',
+  color: '#ffffff !important',
+  cursor: 'pointer',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important',
 
-const Subtitle = styled.p`
-  color: #94a3b8;
-  font-size: 1.1rem;
-`;
+  [theme.breakpoints.down('sm')]: {
+    padding: '32px 20px',
+  },
 
-const StyledPaper = styled(Paper)`
-  padding: 40px 24px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 24px !important;
-  color: #ffffff !important;
-  cursor: pointer;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  '&:hover': {
+    background: 'rgba(255, 255, 255, 0.06) !important',
+    transform: 'translateY(-8px)',
+    borderColor: 'rgba(124, 58, 237, 0.6) !important',
+    boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 40px 2px rgba(124, 58, 237, 0.15) !important',
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.07) !important;
-    transform: translateY(-12px);
-    border-color: #7c3aed !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    '& .icon-wrapper': {
+      backgroundColor: '#7c3aed',
+      color: '#ffffff',
+      boxShadow: '0 0 20px 4px rgba(124, 58, 237, 0.4)',
+      transform: 'scale(1.05) rotate(4deg)',
+    },
+  },
 
-    .icon-wrapper {
-      background: #7c3aed;
-      transform: rotate(5deg);
-    }
-  }
+  '& .icon-wrapper': {
+    width: '76px',
+    height: '76px',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    color: '#a78bfa',
+    borderRadius: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '24px',
+    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
 
-  .icon-wrapper {
-    width: 70px;
-    height: 70px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    transition: all 0.3s ease;
+    '& svg': {
+      fontSize: '2.5rem',
+    },
+  },
 
-    svg {
-      font-size: 2.5rem;
-    }
-  }
-`;
+  '& .card-heading': {
+    marginBottom: '12px',
+    fontSize: '1.45rem',
+    fontWeight: 800,
+    letterSpacing: '-0.2px',
+    color: '#f8fafc',
+  },
 
-const StyledTypography = styled.h2`
-  margin-bottom: 12px;
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-`;
-
-const Description = styled.p`
-  font-size: 0.85rem;
-  color: #94a3b8;
-  line-height: 1.6;
-  font-weight: 400;
-`;
+  '& .card-description': {
+    fontSize: '0.875rem',
+    color: '#94a3b8',
+    lineHeight: 1.6,
+    fontWeight: 500,
+  },
+}));

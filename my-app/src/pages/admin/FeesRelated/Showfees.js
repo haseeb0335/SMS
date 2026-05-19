@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -21,11 +20,10 @@ import {
 // Charts
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    Cell, PieChart, Pie, Legend, AreaChart, Area 
+    Cell, PieChart, Pie, Legend
 } from 'recharts';
 
 // Icons
-import DownloadIcon from "@mui/icons-material/Download";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SchoolIcon from '@mui/icons-material/School';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -41,6 +39,7 @@ const ShowFees = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
     
     const { studentsList } = useSelector((state) => state.student);
     const { currentUser } = useSelector(state => state.user);
@@ -94,22 +93,12 @@ const ShowFees = () => {
         return groups;
     }, [studentsList, feesList, selectedMonth]);
 
-    const lineChartData = useMemo(() => {
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const monthlyData = feesList.reduce((acc, fee) => {
-            const month = new Date(fee.date).toLocaleString('default', { month: 'short' });
-            acc[month] = (acc[month] || 0) + Number(fee.amount);
-            return acc;
-        }, {});
-        return months.filter(m => monthlyData[m]).map(name => ({ name, amount: monthlyData[name] }));
-    }, [feesList]);
-
     const pieChartData = useMemo(() => {
         const totalStudents = studentsList?.length || 0;
         const paidStudents = feesList.reduce((acc, fee) => { acc.add(fee.studentId); return acc; }, new Set()).size;
         return [
-            { name: 'Paid', value: paidStudents, color: '#10b981' },
-            { name: 'Unpaid', value: Math.max(0, totalStudents - paidStudents), color: '#ef4444' }
+            { name: 'Paid Records', value: paidStudents, color: '#10b981' },
+            { name: 'Unpaid Records', value: Math.max(0, totalStudents - paidStudents), color: '#ef4444' }
         ];
     }, [studentsList, feesList]);
 
@@ -117,14 +106,25 @@ const ShowFees = () => {
         return Object.entries(groupedData).map(([name, data]) => ({
             name,
             total: data.total
-        }));
+        })).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     }, [groupedData]);
 
     const downloadClassPDF = (className, data) => {
         const doc = new jsPDF();
         doc.setFontSize(18).text(`Class Report: ${className} (${selectedMonth})`, 14, 20);
-        const rows = data.students.map(s => [s.rollNum, s.name, s.feeHistory.length > 0 ? 'Paid' : 'Unpaid', `Rs. ${s.feeHistory.reduce((sum, f) => sum + Number(f.amount), 0)}`]);
-        autoTable(doc, { head: [['Roll No', 'Name', 'Status', 'Total Paid']], body: rows, startY: 35, theme: 'grid', headStyles: { fillColor: [25, 118, 210] } });
+        const rows = data.students.map(s => [
+            s.rollNum, 
+            s.name, 
+            s.feeHistory.length > 0 ? 'Paid' : 'Unpaid', 
+            `Rs. ${s.feeHistory.reduce((sum, f) => sum + Number(f.amount), 0)}`
+        ]);
+        autoTable(doc, { 
+            head: [['Roll No', 'Name', 'Status', 'Total Paid']], 
+            body: rows, 
+            startY: 35, 
+            theme: 'grid', 
+            headStyles: { fillColor: [37, 99, 235] } 
+        });
         doc.save(`${className}_${selectedMonth}_Report.pdf`);
     };
 
@@ -135,21 +135,39 @@ const ShowFees = () => {
         receiptWindow.print();
     };
 
-    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <CircularProgress strokeWidth={3} />
+            </Box>
+        );
+    }
+
+    const grandTotalCollection = Object.values(groupedData).reduce((acc, curr) => acc + curr.total, 0);
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <Stack direction={isMobile ? "column" : "row"} justifyContent="space-between" alignItems={isMobile ? "flex-start" : "center"} mb={4} spacing={2}>
-                <Typography variant="h4" fontWeight={900} color="primary">Financial Analytics</Typography>
+        <Container maxWidth="xl" sx={{ mt: { xs: 1.5, md: 4 }, mb: 4, px: { xs: 1.5, sm: 3 } }}>
+            
+            {/* Top SaaS Heading Header Section */}
+            <Stack 
+                direction={isMobile ? "column" : "row"} 
+                justifyContent="space-between" 
+                alignItems={isMobile ? "stretch" : "center"} 
+                mb={4} 
+                spacing={2}
+            >
+                <Typography variant="h4" fontWeight={900} color="#1e293b" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
+                    Financial Analytics
+                </Typography>
                 
-                <FormControl variant="outlined" size="small" sx={{ minWidth: 200, bgcolor: 'background.paper', borderRadius: 2 }}>
-                    <InputLabel id="month-select-label">Select Month</InputLabel>
+                <FormControl variant="outlined" size="small" sx={{ minWidth: { xs: '100%', sm: 220 }, bgcolor: 'background.paper', '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}>
+                    <InputLabel id="month-select-label">Select Active Month</InputLabel>
                     <Select
                         labelId="month-select-label"
                         value={selectedMonth}
-                        label="Select Month"
+                        label="Select Active Month"
                         onChange={(e) => setSelectedMonth(e.target.value)}
-                        startAdornment={<CalendarMonthIcon fontSize="small" sx={{ mr: 1, color: 'action.active' }} />}
+                        startAdornment={<CalendarMonthIcon sx={{ mr: 1, color: '#64748b', fontSize: '1.25rem' }} />}
                     >
                         {availableMonths.map((month, i) => (
                             <MenuItem key={i} value={month}>{month}</MenuItem>
@@ -158,97 +176,136 @@ const ShowFees = () => {
                 </FormControl>
             </Stack>
 
-            <Grid container spacing={3} mb={4}>
-                <Grid item xs={12} md={3}>
-                    <Card sx={{ p: 3, borderRadius: 5, height: '100%', background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', color: 'white' }}>
-                        <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700 }}>Total Collection ({selectedMonth})</Typography>
-                        <Typography variant={isMobile ? "h4" : "h3"} fontWeight={900}>
-                            Rs. {Object.values(groupedData).reduce((acc, curr) => acc + curr.total, 0).toLocaleString()}
+            {/* Dashboard Analytics Responsive Grid Row Section */}
+            <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4, alignItems: 'stretch' }}>
+                
+                {/* Total Stats Banner Summary Mini-Card */}
+                <Grid item xs={12} md={3.5}>
+                    <Card sx={{ p: 3, borderRadius: '24px', height: '100%', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800, letterSpacing: 1.2, display: 'block' }}>
+                            Total Collection ({selectedMonth})
                         </Typography>
-                        <Stack direction="row" spacing={1} mt={1} alignItems="center"><TrendingUpIcon fontSize="small" /><Typography variant="caption">REAL-TIME</Typography></Stack>
+                        <Typography variant={isMobile ? "h4" : "h3"} fontWeight={900} sx={{ my: 1, letterSpacing: '-1px' }}>
+                            Rs. {grandTotalCollection.toLocaleString()}
+                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+                            <TrendingUpIcon sx={{ fontSize: '1.15rem', color: '#10b981' }} />
+                            <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 700, letterSpacing: 0.5 }}>LIVE STREAM MONITORING</Typography>
+                        </Stack>
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} md={5}>
-                    <Card sx={{ p: 2, borderRadius: 5, height: 300, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                        <Typography variant="subtitle2" fontWeight={800} color="text.secondary" mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <BarChartIcon color="primary" fontSize="small" /> CLASS-WISE COLLECTION
+                {/* Micro Pill Styled Recharts Bar Visualizer */}
+                <Grid item xs={12} md={5.5}>
+                    <Paper sx={{ p: 2.5, borderRadius: '24px', height: { xs: 240, sm: 280 }, border: '1px solid #e2e8f0', boxShadow: 'none', display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="subtitle2" fontWeight="800" color="#64748b" mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}>
+                            <BarChartIcon sx={{ color: '#3b82f6' }} /> Class-wise Breakdown
                         </Typography>
-                        <ResponsiveContainer width="100%" height="80%">
-                            <BarChart data={classChartData}>
+                        <ResponsiveContainer width="100%" height="85%">
+                            <BarChart data={classChartData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontWeight: 600 }} />
-                                <YAxis hide />
-                                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey="total" fill={theme.palette.primary.main} radius={[6, 6, 0, 0]} barSize={30} />
+                                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 600 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                                <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.04)' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.06)' }} />
+                                <Bar dataKey="total" fill="#3b82f6" radius={[8, 8, 0, 0]} barSize={isMobile ? 16 : 24} />
                             </BarChart>
                         </ResponsiveContainer>
-                    </Card>
+                    </Paper>
                 </Grid>
 
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 2, borderRadius: 5, height: 300, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                        <Typography variant="subtitle2" fontWeight={800} color="text.secondary" mb={1}>PAYMENT STATUS RATIO</Typography>
-                        <ResponsiveContainer width="100%" height="85%">
+                {/* Donut Style Metric Balance Chart Component */}
+                <Grid item xs={12} md={3}>
+                    <Paper sx={{ p: 2.5, borderRadius: '24px', height: { xs: 240, sm: 280 }, border: '1px solid #e2e8f0', boxShadow: 'none', display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="subtitle2" fontWeight="800" color="#64748b" mb={1} sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}>
+                            Payment Status Ratio
+                        </Typography>
+                        <ResponsiveContainer width="100%" height="90%">
                             <PieChart>
-                                <Pie data={pieChartData} innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value" stroke="none">
+                                <Pie data={pieChartData} innerRadius={isMdUp ? 52 : 45} outerRadius={isMdUp ? 70 : 60} paddingAngle={6} dataKey="value" stroke="none">
                                     {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                 </Pie>
-                                <Tooltip />
-                                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
+                                <Tooltip contentStyle={{ borderRadius: '10px', fontSize: '11px' }} />
+                                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 700, color: '#475569' }} />
                             </PieChart>
                         </ResponsiveContainer>
-                    </Card>
+                    </Paper>
                 </Grid>
             </Grid>
 
+            {/* Accordion Lists Sections Containing Tabular Students Groupings */}
             {Object.entries(groupedData).map(([className, data], idx) => (
-                <Accordion key={idx} sx={{ mb: 2, borderRadius: '20px !important', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Stack direction="row" spacing={2} alignItems="center" width="100%">
-                            <SchoolIcon color="primary" />
-                            {/* Class Name and Month side by side */}
-                            <Typography fontWeight={800}>{className} ({selectedMonth})</Typography>
-                            <Chip label={`Total: Rs. ${data.total.toLocaleString()}`} size="small" sx={{ fontWeight: 800, bgcolor: '#e0f2fe', color: '#0369a1' }} />
-                            {!isMobile && <Box sx={{ flexGrow: 1 }} />}
-                            <Button size="small" startIcon={<PictureAsPdfIcon />} onClick={(e) => { e.stopPropagation(); downloadClassPDF(className, data); }} variant="text">Report</Button>
-                        </Stack>
+                <Accordion key={idx} sx={{ mb: 2, borderRadius: '16px !important', border: '1px solid #e2e8f0', boxShadow: 'none', '&:before': { display: 'none' }, overflow: 'hidden' }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#64748b' }} />}>
+                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, width: '100%', pr: 1 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <SchoolIcon sx={{ color: '#3b82f6' }} />
+                                <Typography fontWeight={800} color="#0f172a">{className}</Typography>
+                            </Stack>
+                            
+                            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', width: { xs: '100%', sm: 'auto' }, ml: { sm: 'auto' }, justifyContent: 'space-between' }}>
+                                <Chip label={`Collected: Rs. ${data.total.toLocaleString()}`} size="small" sx={{ fontWeight: 800, bgcolor: '#f0fdf4', color: '#16a34a', borderRadius: '8px' }} />
+                                <Button 
+                                    size="small" 
+                                    startIcon={<PictureAsPdfIcon />} 
+                                    onClick={(e) => { e.stopPropagation(); downloadClassPDF(className, data); }} 
+                                    variant="outlined"
+                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '8px', color: '#64748b', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' } }}
+                                >
+                                    PDF Report
+                                </Button>
+                            </Box>
+                        </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
-                        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #f1f5f9', borderRadius: '12px' }}>
+                    <AccordionDetails sx={{ p: 0, borderTop: '1px solid #f1f5f9' }}>
+                        <TableContainer sx={{ overflowX: 'auto' }}>
                             <Table size="small">
                                 <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                     <TableRow>
-                                        <TableCell sx={{ fontWeight: 700 }}>Roll No</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Amount Paid</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 700 }}>Action</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: '#64748b', py: 1.5 }}>Roll No</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: '#64748b', py: 1.5 }}>Student Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: '#64748b', py: 1.5 }}>Amount Paid</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: '#64748b', py: 1.5 }}>Status Alignment</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, color: '#64748b', py: 1.5 }}>Action Trigger</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {data.students.map((student) => {
                                         const latestFee = student.feeHistory[student.feeHistory.length - 1];
                                         return (
-                                            <TableRow key={student._id} hover>
-                                                <TableCell>{student.rollNum}</TableCell>
-                                                <TableCell sx={{ fontWeight: 600 }}>{student.name}</TableCell>
-                                                <TableCell sx={{ fontWeight: 600, color: 'primary.main' }}>
+                                            <TableRow key={student._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                                <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#475569' }}>{student.rollNum}</TableCell>
+                                                <TableCell sx={{ py: 1.5, fontWeight: 700, color: '#0f172a' }}>{student.name}</TableCell>
+                                                <TableCell sx={{ py: 1.5, fontWeight: 800, color: latestFee ? '#10b981' : '#64748b' }}>
                                                     {latestFee ? `Rs. ${Number(latestFee.amount).toLocaleString()}` : "Rs. 0"}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell sx={{ py: 1.5 }}>
                                                     <Chip 
-                                                        label={latestFee ? "Paid" : "Unpaid"} 
-                                                        color={latestFee ? "success" : "error"} 
+                                                        label={latestFee ? "Paid Match" : "Unpaid Balance"} 
                                                         size="small" 
-                                                        sx={{ fontWeight: 800, fontSize: '0.65rem' }} 
+                                                        sx={{ 
+                                                            fontWeight: 800, 
+                                                            fontSize: '0.65rem', 
+                                                            textTransform: 'uppercase',
+                                                            bgcolor: latestFee ? '#e6f4ea' : '#fce8e6',
+                                                            color: latestFee ? '#137333' : '#c5221f',
+                                                            borderRadius: '6px'
+                                                        }} 
                                                     />
                                                 </TableCell>
-                                                <TableCell align="right">
+                                                <TableCell align="center" sx={{ py: 1.5 }}>
                                                     {latestFee ? (
-                                                        <IconButton size="small" onClick={() => downloadIndividualPOS(latestFee)} color="primary"><ReceiptLongIcon fontSize="small" /></IconButton>
+                                                        <IconButton size="small" onClick={() => downloadIndividualPOS(latestFee)} sx={{ color: '#3b82f6', p: 1 }}>
+                                                            <ReceiptLongIcon fontSize="small" />
+                                                        </IconButton>
                                                     ) : (
-                                                        <Button variant="outlined" size="small" onClick={() => navigate("/Admin/fees")}>Collect</Button>
+                                                        <Button 
+                                                            variant="contained" 
+                                                            size="small" 
+                                                            onClick={() => navigate("/Admin/fees")} 
+                                                            sx={{ textTransform: 'none', borderRadius: '8px', px: 2, fontWeight: 700, boxShadow: 'none', bgcolor: '#3b82f6', '&:hover': { boxShadow: 'none', bgcolor: '#2563eb' } }}
+                                                        >
+                                                            Collect
+                                                        </Button>
                                                     )}
                                                 </TableCell>
                                             </TableRow>

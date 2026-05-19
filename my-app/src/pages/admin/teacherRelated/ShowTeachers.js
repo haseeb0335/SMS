@@ -65,16 +65,23 @@ const ShowTeachers = () => {
     ];
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Container maxWidth="xl" sx={{ mt: { xs: 2, sm: 4 }, mb: 4 }}>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
                     <CircularProgress size={50} thickness={4} />
                 </Box>
             ) : (
                 <>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', sm: 'row' }, 
+                        justifyContent: 'space-between', 
+                        alignItems: { xs: 'flex-start', sm: 'center' }, 
+                        gap: 2,
+                        mb: 3 
+                    }}>
                         <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 800, color: '#0f172a' }}>
+                            <Typography variant="h4" sx={{ fontWeight: 800, color: '#0f172a', fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
                                 Teachers
                             </Typography>
                             <Typography variant="body2" sx={{ color: '#64748b' }}>
@@ -86,7 +93,7 @@ const ShowTeachers = () => {
                                 variant="contained" 
                                 startIcon={<PersonAddAlt1Icon />}
                                 onClick={() => navigate("/Admin/teachers/chooseclass")}
-                                sx={{ borderRadius: '10px' }}
+                                sx={{ borderRadius: '10px', width: { xs: '100%', sm: 'auto' } }}
                             >
                                 Add Teacher
                             </GreenButton>
@@ -94,7 +101,7 @@ const ShowTeachers = () => {
                     </Box>
 
                     <StyledPaper elevation={0}>
-                        <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+                        <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)', overflowX: 'auto' }}>
                             <Table stickyHeader>
                                 <TableHead>
                                     <StyledTableRow>
@@ -182,4 +189,30 @@ const StyledPaper = styled(Paper)`
   border-radius: 16px !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+
+  /* Formats row layout and alignments cleanly on small mobile viewports */
+  @media (max-width: 600px) {
+    th, td {
+      white-space: nowrap;
+      padding: 12px 14px !important;
+    }
+  }
+
+  /* Formats the pagination container layout cleanly when viewed on small mobile displays */
+  & .MuiTablePagination-root {
+    @media (max-width: 600px) {
+      & .MuiTablePagination-toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 8px;
+        gap: 8px;
+      }
+      & .MuiTablePagination-spacer {
+        display: none;
+      }
+      & .MuiTablePagination-actions {
+        margin-left: 0;
+      }
+    }
+  }
 `;

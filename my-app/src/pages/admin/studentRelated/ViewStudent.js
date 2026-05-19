@@ -154,26 +154,26 @@ const ViewStudent = () => {
         <Box>
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={4}>
-                    <Card sx={{ borderRadius: 5, textAlign: 'center', p: 4, border: '1px solid #eee' }}>
-   <Avatar
-    src={userDetails?.profilePic || ""}
-    sx={{
-        width: 100,
-        height: 100,
-        margin: '0 auto',
-        bgcolor: theme.palette.primary.main,
-        mb: 2,
-        fontSize: '2.5rem'
-    }}
->
-    {!userDetails?.profilePic && userDetails?.name?.charAt(0)}
-</Avatar>
-                        <Typography variant="h5" fontWeight="800">{userDetails?.name}</Typography>
+                    <Card sx={{ borderRadius: 5, textAlign: 'center', p: { xs: 3, sm: 4 }, border: '1px solid #eee' }}>
+                        <Avatar
+                            src={userDetails?.profilePic || ""}
+                            sx={{
+                                width: 100,
+                                height: 100,
+                                margin: '0 auto',
+                                bgcolor: theme.palette.primary.main,
+                                mb: 2,
+                                fontSize: '2.5rem'
+                            }}
+                        >
+                            {!userDetails?.profilePic && userDetails?.name?.charAt(0)}
+                        </Avatar>
+                        <Typography variant="h5" fontWeight="800" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>{userDetails?.name}</Typography>
                         <Chip label="Student Profile" color="primary" variant="outlined" size="small" sx={{ mt: 1, fontWeight: 600 }} />
                     </Card>
                 </Grid>
                 <Grid item xs={12} md={8}>
-                    <Card sx={{ borderRadius: 5, p: 1, border: '1px solid #eee' }}>
+                    <Card sx={{ borderRadius: 5, p: 0.5, border: '1px solid #eee' }}>
                         <Stack>
                             {[
                                 { icon: <AccountCircle color="primary" />, label: 'Full Name', value: userDetails?.name },
@@ -181,11 +181,11 @@ const ViewStudent = () => {
                                 { icon: <ClassIcon sx={{ color: '#ff9800' }} />, label: 'Class', value: userDetails?.sclassName?.sclassName },
                                 { icon: <SchoolIcon color="info" />, label: 'Institution', value: userDetails?.school?.schoolName }
                             ].map((item, index) => (
-                                <Box key={index} sx={{ p: 2.5, display: 'flex', alignItems: 'center', borderBottom: index === 3 ? 'none' : '1px solid #f5f5f5' }}>
-                                    <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.03)', mr: 3 }}>{item.icon}</Avatar>
+                                <Box key={index} sx={{ p: { xs: 2, sm: 2.5 }, display: 'flex', alignItems: 'center', borderBottom: index === 3 ? 'none' : '1px solid #f5f5f5' }}>
+                                    <Avatar sx={{ bgcolor: 'rgba(0,0,0,0.03)', mr: { xs: 2, sm: 3 }, width: 40, height: 40 }}>{item.icon}</Avatar>
                                     <Box>
-                                        <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase' }}>{item.label}</Typography>
-                                        <Typography variant="body1" fontWeight="700">{item.value || 'Not Assigned'}</Typography>
+                                        <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>{item.label}</Typography>
+                                        <Typography variant="body1" fontWeight="700" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>{item.value || 'Not Assigned'}</Typography>
                                     </Box>
                                 </Box>
                             ))}
@@ -196,13 +196,13 @@ const ViewStudent = () => {
 
             {/* Information Section - FIXED & INTEGRATED */}
             <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid #e0e0e0' }}>
-                <CardContent sx={{ p: 4 }}>
-                    <Typography variant="h6" fontWeight="700" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
+                    <Typography variant="h6" fontWeight="700" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                         Personal Information
                     </Typography>
-                    <Divider sx={{ mb: 4 }} />
+                    <Divider sx={{ mb: 3 }} />
                     
-                    <Grid container spacing={4}>
+                    <Grid container spacing={3}>
                         <InfoBox icon={<Email color="primary" />} label="Email Address" value={userDetails?.email} />
                         <InfoBox icon={<Phone color="primary" />} label="Phone Number" value={userDetails?.phone} />
                         <InfoBox icon={<Cake color="primary" />} label="Date of Birth" value={userDetails?.dob} />
@@ -222,14 +222,14 @@ const ViewStudent = () => {
 
         return (
             <Box sx={{ pb: 8 }}>
-                <Typography variant="h5" fontWeight="800" sx={{ mb: 3 }}>Leave Requests</Typography>
+                <Typography variant="h5" fontWeight="800" sx={{ mb: 3, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Leave Requests</Typography>
                 <Paper sx={{ borderRadius: 4, overflow: 'hidden', border: '1px solid #eee' }}>
-                    <TableContainer>
+                    <TableContainer sx={{ overflowX: 'auto' }}>
                         <Table>
                             <TableHead sx={{ bgcolor: '#f8f9fa' }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Reason</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Date</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', minWidth: 140 }}>Reason</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                                     {isTeacher && <TableCell align="center" sx={{ fontWeight: 'bold' }}>Action</TableCell>}
                                 </TableRow>
@@ -238,7 +238,7 @@ const ViewStudent = () => {
                                 {displayLeaves.length > 0 ? (
                                     displayLeaves.map((leave, index) => (
                                         <StyledTableRow key={index}>
-                                            <StyledTableCell>{new Date(leave.leaveDate).toLocaleDateString()}</StyledTableCell>
+                                            <StyledTableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(leave.leaveDate).toLocaleDateString()}</StyledTableCell>
                                             <StyledTableCell>{leave.leaveReason}</StyledTableCell>
                                             <StyledTableCell>
                                                 <Chip label={leave.status} size="small" color={leave.status === 'Pending' ? 'warning' : 'success'} />
@@ -251,6 +251,7 @@ const ViewStudent = () => {
                                                         size="small"
                                                         startIcon={<AssignmentTurnedInIcon />}
                                                         onClick={() => handleApprove(leave._id)}
+                                                        sx={{ whiteSpace: 'nowrap' }}
                                                     >
                                                         Approve
                                                     </Button>
@@ -260,7 +261,7 @@ const ViewStudent = () => {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>No leave records found.</TableCell>
+                                        <TableCell colSpan={isTeacher ? 4 : 3} align="center" sx={{ py: 3 }}>No leave records found.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -276,38 +277,44 @@ const ViewStudent = () => {
         const attendanceData = Object.entries(groupAttendanceBySubject(attendance));
         return (
             <Box sx={{ pb: 8 }}>
-                <Typography variant="h5" fontWeight="800" sx={{ mb: 3 }}>Attendance Log</Typography>
+                <Typography variant="h5" fontWeight="800" sx={{ mb: 3, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Attendance Log</Typography>
                 {selectedSection === 'table' ? (
                     <Paper sx={{ borderRadius: 4, overflow: 'hidden', border: '1px solid #eee' }}>
-                        <Table>
-                            <TableBody>
-                                {attendanceData.map(([name, { present, sessions, subId }], index) => {
-                                    const percentage = calculateSubjectAttendancePercentage(present, sessions);
-                                    return (
-                                        <StyledTableRow key={index}>
-                                            <StyledTableCell sx={{ fontWeight: 700 }}>{name}</StyledTableCell>
-                                            <StyledTableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <LinearProgress variant="determinate" value={Number(percentage)} sx={{ flexGrow: 1, height: 8, borderRadius: 5 }} />
-                                                    <Typography variant="body2" fontWeight="700">{percentage}%</Typography>
-                                                </Box>
-                                            </StyledTableCell>
-                                            <StyledTableCell align="right">
-                                                {isTeacher && (
-                                                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                        <Button variant="contained" size="small" onClick={() => navigate(`/Teacher/student/attendance/${studentID}/${subId}`)}>Take</Button>
-                                                        <IconButton size="small" onClick={() => removeSubAttendance(subId)}><DeleteIcon color="error" fontSize="small" /></IconButton>
-                                                    </Stack>
-                                                )}
-                                            </StyledTableCell>
-                                        </StyledTableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
+                        <TableContainer sx={{ overflowX: 'auto' }}>
+                            <Table>
+                                <TableBody>
+                                    {attendanceData.map(([name, { present, sessions, subId }], index) => {
+                                        const percentage = calculateSubjectAttendancePercentage(present, sessions);
+                                        return (
+                                            <StyledTableRow key={index}>
+                                                <StyledTableCell sx={{ fontWeight: 700, minWidth: 120 }}>{name}</StyledTableCell>
+                                                <StyledTableCell sx={{ minWidth: 150 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                        <LinearProgress variant="determinate" value={Number(percentage)} sx={{ flexGrow: 1, height: 8, borderRadius: 5 }} />
+                                                        <Typography variant="body2" fontWeight="700">{percentage}%</Typography>
+                                                    </Box>
+                                                </StyledTableCell>
+                                                <StyledTableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                                                    {isTeacher && (
+                                                        <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                                                            <Button variant="contained" size="small" onClick={() => navigate(`/Teacher/student/attendance/${studentID}/${subId}`)}>Take</Button>
+                                                            <IconButton size="small" onClick={() => removeSubAttendance(subId)}><DeleteIcon color="error" fontSize="small" /></IconButton>
+                                                        </Stack>
+                                                    )}
+                                                </StyledTableCell>
+                                            </StyledTableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     </Paper>
                 ) : (
-                    <CustomBarChart chartData={attendanceData.map(([name, { present, sessions }]) => ({ subject: name, attendancePercentage: calculateSubjectAttendancePercentage(present, sessions) }))} dataKey="attendancePercentage" />
+                    <Box sx={{ width: '100%', overflowX: 'auto', pt: 2 }}>
+                        <Box sx={{ minWidth: 500 }}>
+                            <CustomBarChart chartData={attendanceData.map(([name, { present, sessions }]) => ({ subject: name, attendancePercentage: calculateSubjectAttendancePercentage(present, sessions) }))} dataKey="attendancePercentage" />
+                        </Box>
+                    </Box>
                 )}
             </Box>
         );
@@ -318,7 +325,7 @@ const ViewStudent = () => {
         const subjectsWithNoMarks = subjectsList?.filter((sub) => !marks.some((m) => m.subName?._id === sub._id));
         return (
             <Box sx={{ pb: 8 }}>
-                <Typography variant="h5" fontWeight="800" sx={{ mb: 4 }}>Academic Performance</Typography>
+                <Typography variant="h5" fontWeight="800" sx={{ mb: 3, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Academic Performance</Typography>
                 <Grid container spacing={3}>
                     {marks.map((result, index) => (
                         <Grid item xs={12} sm={6} md={4} key={index}>
@@ -329,10 +336,10 @@ const ViewStudent = () => {
                                     </IconButton>
                                 )}
                                 <CardContent sx={{ p: 3 }}>
-                                    <Typography variant="subtitle1" fontWeight="700" color="primary">{result.subName?.subName}</Typography>
+                                    <Typography variant="subtitle1" fontWeight="700" color="primary" sx={{ pr: 3 }}>{result.subName?.subName}</Typography>
                                     <Divider sx={{ my: 1.5 }} />
                                     <Stack direction="row" alignItems="baseline" spacing={1}>
-                                        <Typography variant="h3" fontWeight="900">{result.marksObtained}</Typography>
+                                        <Typography variant="h3" fontWeight="900" sx={{ fontSize: { xs: '2.5rem', sm: '3rem' } }}>{result.marksObtained}</Typography>
                                         <Typography variant="body1" color="text.secondary">/ {result.totalMarks || 100}</Typography>
                                     </Stack>
                                     <Button fullWidth variant="outlined" size="small" startIcon={<EditIcon />} sx={{ mt: 2 }} onClick={() => navigate(`/Teacher/class/student/marks/${studentID}/${result.subName?._id}`)}>Edit</Button>
@@ -366,26 +373,30 @@ const ViewStudent = () => {
 
         return (
             <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                    <Typography variant="h5" fontWeight="800">Analytics</Typography>
-                    <Button variant="contained" color="secondary" startIcon={<DownloadIcon />} onClick={downloadPDF}>Report</Button>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }} spacing={2}>
+                    <Typography variant="h5" fontWeight="800" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Analytics</Typography>
+                    <Button variant="contained" color="secondary" size="small" startIcon={<DownloadIcon />} onClick={downloadPDF}>Report</Button>
                 </Stack>
-                <Box ref={reportRef} sx={{ p: 4, bgcolor: '#fff', borderRadius: 4 }}>
+                <Box ref={reportRef} sx={{ p: { xs: 2, sm: 4 }, bgcolor: '#fff', borderRadius: 4, border: '1px solid #eee' }}>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12}>
                             <Card variant="outlined" sx={{ p: 2, borderRadius: 4, bgcolor: '#f8f9fa' }}>
-                                <Typography variant="h4" fontWeight="800" color="primary">{attendanceRate}%</Typography>
+                                <Typography variant="h4" fontWeight="800" color="primary" sx={{ fontSize: { xs: '1.75rem', sm: '2.25rem' } }}>{attendanceRate}%</Typography>
                                 <Typography variant="body2">Attendance Rate</Typography>
                             </Card>
                         </Grid>
                         <Grid item xs={12}>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={examData}>
-                                    <XAxis dataKey="subject" />
-                                    <YAxis /><Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="marks" fill={theme.palette.primary.main} radius={[8, 8, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                                <Box sx={{ minWidth: 450, height: 300 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={examData}>
+                                            <XAxis dataKey="subject" />
+                                            <YAxis /><Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="marks" fill={theme.palette.primary.main} radius={[8, 8, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Box>
+                            </Box>
                         </Grid>
                     </Grid>
                 </Box>
@@ -396,10 +407,17 @@ const ViewStudent = () => {
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 5, mb: 10 }}>
+        <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 5 }, mb: 10, px: { xs: 1.5, sm: 3 } }}>
             <TabContext value={tabValue}>
                 <Paper sx={{ borderRadius: 4, mb: 4, p: 0.5 }} elevation={0} variant="outlined">
-                    <TabList onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+                    <TabList 
+                        onChange={handleTabChange} 
+                        variant="scrollable" 
+                        scrollButtons="auto"
+                        sx={{
+                            '& .MuiTab-root': { textTransform: 'none', minWidth: 'auto', px: { xs: 2, sm: 3 } }
+                        }}
+                    >
                         <Tab label="Profile" value="1" />
                         <Tab label="Attendance" value="2" />
                         <Tab label="Marks" value="3" />
@@ -408,15 +426,15 @@ const ViewStudent = () => {
                     </TabList>
                 </Paper>
 
-                <TabPanel value="1"><DetailsSection /></TabPanel>
-                <TabPanel value="2"><AttendanceSection /></TabPanel>
-                <TabPanel value="3"><MarksSection /></TabPanel>
-                <TabPanel value="4"><AnalyticsSection /></TabPanel>
-                <TabPanel value="5"><LeaveSection /></TabPanel>
+                <TabPanel value="1" sx={{ px: 0 }}><DetailsSection /></TabPanel>
+                <TabPanel value="2" sx={{ px: 0 }}><AttendanceSection /></TabPanel>
+                <TabPanel value="3" sx={{ px: 0 }}><MarksSection /></TabPanel>
+                <TabPanel value="4" sx={{ px: 0 }}><AnalyticsSection /></TabPanel>
+                <TabPanel value="5" sx={{ px: 0 }}><LeaveSection /></TabPanel>
 
                 {(tabValue === '2' || tabValue === '3') && (
-                    <Paper sx={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', borderRadius: 10, zIndex: 1000 }}>
-                        <BottomNavigation action={selectedSection} value={selectedSection} onChange={handleSectionChange} showLabels sx={{ width: 300 }}>
+                    <Paper sx={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', borderRadius: 10, zIndex: 1000, boxShadow: 4 }}>
+                        <BottomNavigation action={selectedSection} value={selectedSection} onChange={handleSectionChange} showLabels sx={{ width: { xs: 280, sm: 300 }, borderRadius: 10 }}>
                             <BottomNavigationAction label="Table" value="table" icon={<TableChartIcon />} />
                             <BottomNavigationAction label="Graph" value="chart" icon={<InsightsIcon />} />
                         </BottomNavigation>
@@ -441,11 +459,11 @@ const InfoBox = ({ icon, label, value, fullWidth = false }) => (
             }}>
                 {icon}
             </Box>
-            <Box>
-                <Typography variant="caption" color="textSecondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Box sx={{ overflow: 'hidden' }}>
+                <Typography variant="caption" color="textSecondary" fontWeight="600" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.65rem' }}>
                     {label}
                 </Typography>
-                <Typography variant="body1" fontWeight="700">
+                <Typography variant="body1" fontWeight="700" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' }, wordBreak: 'break-word' }}>
                     {value || "Not Provided"}
                 </Typography>
             </Box>

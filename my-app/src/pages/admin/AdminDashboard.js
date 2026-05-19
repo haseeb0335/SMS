@@ -7,6 +7,10 @@ import {
     Typography,
     Divider,
     IconButton,
+    useTheme,
+    useMediaQuery,
+    AppBar as MuiAppBar,
+    Drawer as MuiDrawer
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -54,8 +58,9 @@ import AdmissionFees from '../../components/AdmissionFees';
 import AnnualFund from '../../components/AnnualFund'; // New component for annual fund management
 
 const AdminDashboard = () => {
-
     const [open, setOpen] = useState(false);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const toggleDrawer = () => {
         setOpen(!open);
@@ -63,12 +68,16 @@ const AdminDashboard = () => {
 
     const { currentUser } = useSelector((state) => state.user);
 
+    // Dynamic Header Component Selection to prevent custom CSS blockages on mobile viewports
+    const ActiveAppBar = isMobile ? MuiAppBar : AppBar;
+    const ActiveDrawer = isMobile ? MuiDrawer : Drawer;
+
     return (
         <>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
                 <CssBaseline />
 
-                <AppBar open={open} position='absolute'>
+                <ActiveAppBar open={!isMobile && open} position='fixed'>
                     <Toolbar sx={{ pr: '24px' }}>
                         <IconButton
                             edge="start"
@@ -77,7 +86,10 @@ const AdminDashboard = () => {
                             onClick={toggleDrawer}
                             sx={{
                                 marginRight: '36px',
-                                ...(open && { display: 'none' }),
+                                ...(!isMobile && open && { display: 'none' }),
+                                '@media (max-width: 600px)': {
+                                    marginRight: '12px',
+                                }
                             }}
                         >
                             <MenuIcon />
@@ -95,12 +107,16 @@ const AdminDashboard = () => {
 
                         <AccountMenu profilePic={currentUser?.profilePic} />
                     </Toolbar>
-                </AppBar>
+                </ActiveAppBar>
 
-                <Drawer
-                    variant="permanent"
+                <ActiveDrawer
+                    variant={isMobile ? "temporary" : "permanent"}
                     open={open}
-                    sx={open ? styles.drawerStyled : styles.hideDrawer}
+                    onClose={toggleDrawer}
+                    sx={isMobile ? styles.mobileDrawerStyles : (open ? styles.drawerStyled : styles.hideDrawer)}
+                    ModalProps={{
+                        keepMounted: true, // Enhances mobile opening performance.
+                    }}
                 >
                     <Toolbar sx={styles.toolBarStyled}>
                         <IconButton onClick={toggleDrawer}>
@@ -110,15 +126,15 @@ const AdminDashboard = () => {
 
                     <Divider />
 
-                    <List component="nav">
+                    <List component="nav" onClick={isMobile ? toggleDrawer : undefined}>
                         <SideBar />
                     </List>
-                </Drawer>
+                </ActiveDrawer>
 
                 <Box component="main" sx={styles.boxStyled}>
                     <Toolbar />
 
-                   <Routes>
+                    <Routes>
                         <Route path="/" element={<AdminHomePage />} />
                         <Route path='*' element={<Navigate to="/" />} />
 
@@ -132,7 +148,7 @@ const AdminDashboard = () => {
                         <Route path="/Admin/AnnualFund" element={<AnnualFund />} />
 
                         <Route path="/Admin/fees/exam" element={<ExamFees />} />
-                       
+                        
 
                         <Route path="/Admin/addnotice" element={<AddNotice />} />
                         <Route path="/Admin/notices" element={<ShowNotices />} />
@@ -202,7 +218,7 @@ const styles = {
                 : theme.palette.grey[900],
         flexGrow: 1,
         height: '100vh',
-        padding: '24px', // Added padding for better spacing
+        p: { xs: 1.5, sm: 3 }, 
         overflow: 'auto',
     },
     toolBarStyled: {
@@ -213,6 +229,12 @@ const styles = {
     },
     drawerStyled: {
         display: "flex"
+    },
+    mobileDrawerStyles: {
+        '& .MuiDrawer-paper': {
+            width: '240px',
+            boxSizing: 'border-box',
+        }
     },
     hideDrawer: {
         display: 'flex',

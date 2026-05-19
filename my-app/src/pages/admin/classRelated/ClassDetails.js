@@ -66,7 +66,7 @@ const ClassDetails = () => {
     const ClassSubjectsSection = () => (
         <ContentWrapper>
             <SectionHeader>
-                <Typography variant="h6">Subjects List</Typography>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>Subjects List</Typography>
                 {!response && <SpeedDialTemplate actions={subjectActions} />}
             </SectionHeader>
             {response ? (
@@ -85,7 +85,7 @@ const ClassDetails = () => {
     const ClassStudentsSection = () => (
         <ContentWrapper>
             <SectionHeader>
-                <Typography variant="h6">Students List</Typography>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>Students List</Typography>
                 {!getresponse && <SpeedDialTemplate actions={studentActions} />}
             </SectionHeader>
             {getresponse ? (
@@ -104,7 +104,7 @@ const ClassDetails = () => {
     const ClassTeachersSection = () => (
         <ContentWrapper>
             <SectionHeader>
-                <Typography variant="h6">Assigned Teachers</Typography>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>Assigned Teachers</Typography>
                 <SpeedDialTemplate actions={teacherActions} />
             </SectionHeader>
             {teacherRows.length > 0 ? (
@@ -123,26 +123,26 @@ const ClassDetails = () => {
         const numberOfTeachers = Array.isArray(teachersList) ? teachersList.length : 0;
 
         return (
-            <Box sx={{ mt: 2 }}>
-                <Typography variant="h5" sx={{ mb: 1, color: '#1e293b' }}>
+            <Box sx={{ mt: 1 }}>
+                <Typography variant="h5" sx={{ mb: 1, color: '#1e293b', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
                     Welcome to {sclassDetails?.sclassName || "..."}
                 </Typography>
-                <Typography variant="body1" sx={{ color: '#64748b', mb: 4 }}>
+                <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
                     Manage and view all information related to this section.
                 </Typography>
 
                 <GridContainer>
                     <StatBox>
-                        <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase' }}>Students</Typography>
-                        <Typography variant="h4">{numberOfStudents}</Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase', fontSize: '0.7rem' }}>Students</Typography>
+                        <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' }, fontWeight: 500 }}>{numberOfStudents}</Typography>
                     </StatBox>
                     <StatBox>
-                        <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase' }}>Subjects</Typography>
-                        <Typography variant="h4">{numberOfSubjects}</Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase', fontSize: '0.7rem' }}>Subjects</Typography>
+                        <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' }, fontWeight: 500 }}>{numberOfSubjects}</Typography>
                     </StatBox>
                     <StatBox>
-                        <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase' }}>Teachers</Typography>
-                        <Typography variant="h4">{numberOfTeachers}</Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase', fontSize: '0.7rem' }}>Teachers</Typography>
+                        <Typography variant="h4" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' }, fontWeight: 500 }}>{numberOfTeachers}</Typography>
                     </StatBox>
                 </GridContainer>
             </Box>
@@ -150,35 +150,35 @@ const ClassDetails = () => {
     };
 
     // Columns & Row Mappings
-    const subjectColumns = [{ id: 'name', label: 'Subject', minWidth: 170 }, { id: 'code', label: 'Code', minWidth: 100 }];
+    const subjectColumns = [{ id: 'name', label: 'Subject', minWidth: 140 }, { id: 'code', label: 'Code', minWidth: 80 }];
     const subjectRows = Array.isArray(subjectsList) ? subjectsList.map((s) => ({ name: s.subName, code: s.subCode, id: s._id })) : [];
     
-    const studentColumns = [{ id: 'name', label: 'Student Name', minWidth: 170 }, { id: 'rollNum', label: 'Roll No', minWidth: 100 }];
+    const studentColumns = [{ id: 'name', label: 'Student Name', minWidth: 140 }, { id: 'rollNum', label: 'Roll No', minWidth: 80 }];
     const studentRows = Array.isArray(sclassStudents) ? sclassStudents.map((s) => ({ name: s.name, rollNum: s.rollNum, id: s._id })) : [];
 
-    const teacherColumns = [{ id: 'name', label: 'Teacher', minWidth: 170 }, { id: 'subject', label: 'Subject', minWidth: 100 }];
+    const teacherColumns = [{ id: 'name', label: 'Teacher', minWidth: 140 }, { id: 'subject', label: 'Subject', minWidth: 80 }];
     const teacherRows = Array.isArray(teachersList) ? teachersList.map((t) => ({ name: t.name, subject: t.teachSubject?.subName || "N/A", id: t._id })) : [];
 
-    // Button Havers
+    // Button Havers (Adjusted layout structures safely for phone-width boundaries)
     const SubjectsButtonHaver = ({ row }) => (
-        <Stack direction="row" spacing={1} justifyContent="center">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center" alignItems="center">
             <IconButton onClick={() => deleteHandler(row.id, "Subject")} size="small"><DeleteIcon color="error" fontSize="small" /></IconButton>
-            <BlueButton size="small" variant="contained" onClick={() => navigate(`/Admin/class/subject/${classID}/${row.id}`)}>View</BlueButton>
+            <BlueButton size="small" variant="contained" fullWidth onClick={() => navigate(`/Admin/class/subject/${classID}/${row.id}`)}>View</BlueButton>
         </Stack>
     );
 
     const StudentsButtonHaver = ({ row }) => (
-        <Stack direction="row" spacing={1} justifyContent="center">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center" alignItems="center">
             <IconButton onClick={() => deleteHandler(row.id, "Student")} size="small"><PersonRemoveIcon color="error" fontSize="small" /></IconButton>
-            <BlueButton size="small" variant="contained" onClick={() => navigate("/Admin/students/student/" + row.id)}>View</BlueButton>
-            <PurpleButton size="small" variant="contained" onClick={() => navigate("/Admin/students/student/attendance/" + row.id)}>Attendance</PurpleButton>
+            <BlueButton size="small" variant="contained" fullWidth onClick={() => navigate("/Admin/students/student/" + row.id)}>View</BlueButton>
+            <PurpleButton size="small" variant="contained" fullWidth onClick={() => navigate("/Admin/students/student/attendance/" + row.id)}>Attendance</PurpleButton>
         </Stack>
     );
 
     const TeachersButtonHaver = ({ row }) => (
-        <Stack direction="row" spacing={1} justifyContent="center">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center" alignItems="center">
             <IconButton onClick={() => deleteHandler(row.id, "Teacher")} size="small"><PersonRemoveIcon color="error" fontSize="small" /></IconButton>
-            <BlueButton size="small" variant="contained" onClick={() => navigate("/Admin/teachers/teacher/" + row.id)}>View</BlueButton>
+            <BlueButton size="small" variant="contained" fullWidth onClick={() => navigate("/Admin/teachers/teacher/" + row.id)}>View</BlueButton>
         </Stack>
     );
 
@@ -212,7 +212,7 @@ const ClassDetails = () => {
                                 scrollButtons="auto"
                                 sx={{ 
                                     '& .MuiTabs-indicator': { backgroundColor: '#6366f1' },
-                                    '& .MuiTab-root': { textTransform: 'none', fontWeight: 400, color: '#64748b' },
+                                    '& .MuiTab-root': { textTransform: 'none', fontWeight: 400, color: '#64748b', minWidth: 'auto', px: { xs: 2, sm: 3 } },
                                     '& .Mui-selected': { color: '#6366f1 !important' }
                                 }}
                             >
@@ -224,7 +224,7 @@ const ClassDetails = () => {
                         </Container>
                     </Box>
 
-                    <Container maxWidth="lg" sx={{ py: 4 }}>
+                    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
                         <TabPanel value="1" sx={{ p: 0 }}><ClassDetailsSection /></TabPanel>
                         <TabPanel value="2" sx={{ p: 0 }}><ClassSubjectsSection /></TabPanel>
                         <TabPanel value="3" sx={{ p: 0 }}><ClassStudentsSection /></TabPanel>
@@ -247,9 +247,10 @@ const ContentWrapper = styled(Paper)`
   padding: 24px;
   background: white !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+  overflow-x: auto; /* Gracefully handles inner table rendering for compact screen boundaries */
   
   @media (max-width: 600px) {
-    padding: 16px;
+    padding: 14px;
   }
 `;
 
@@ -257,31 +258,40 @@ const SectionHeader = styled(Box)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   color: #1e293b;
 `;
 
 const GridContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(3, 1fr); /* Fits all three blocks neatly horizontally on small viewports */
+    gap: 8px;
+  }
 `;
 
 const StatBox = styled(Paper)`
-  padding: 24px;
+  padding: 20px 12px;
   border-radius: 16px !important;
   border: 1px solid #eef2f6 !important;
   display: flex;
   flex-direction: column;
   align-items: center;
   background: white !important;
+
+  @media (max-width: 600px) {
+    padding: 12px 6px;
+  }
 `;
 
 const EmptyState = styled(Box)`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px;
+  padding: 30px 16px;
   text-align: center;
 `;

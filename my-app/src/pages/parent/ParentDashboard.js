@@ -7,16 +7,16 @@ import {
   Divider,
   IconButton,
   List,
+  Drawer as MuiDrawer
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import PaymentsIcon from "@mui/icons-material/Payments";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-import { AppBar, Drawer } from "../../components/styles";
+import { AppBar } from "../../components/styles";
 import AccountMenu from "../../components/AccountMenu";
 
 import ParentSideBar from "./ParentSideBar";
@@ -28,7 +28,6 @@ import ParentApplyLeave from "./ParentApplyLeave";
 import Logout from "../Logout";
 
 const ParentDashboard = () => {
-
   const [open, setOpen] = useState(false);
 
   const toggleDrawer = () => {
@@ -42,18 +41,15 @@ const ParentDashboard = () => {
       <CssBaseline />
 
       {/* TOP NAVBAR */}
-      <AppBar open={open} position="absolute">
+      {/* open={false} prevents the navbar width from shrinking or shifting when the overlay drawer opens */}
+      <AppBar open={false} position="absolute">
         <Toolbar sx={{ pr: "24px" }}>
-          
           <IconButton
             edge="start"
             color="inherit"
             aria-label="open drawer"
             onClick={toggleDrawer}
-            sx={{
-              marginRight: "36px",
-              ...(open && { display: "none" }),
-            }}
+            sx={{ marginRight: "36px" }}
           >
             <MenuIcon />
           </IconButton>
@@ -63,7 +59,7 @@ const ParentDashboard = () => {
             variant="h6"
             color="inherit"
             noWrap
-            sx={{ flexGrow: 1 }}
+            sx={{ flexGrow: 1, fontWeight: 700 }}
           >
             Parent Dashboard
           </Typography>
@@ -73,11 +69,23 @@ const ParentDashboard = () => {
         </Toolbar>
       </AppBar>
 
-      {/* SIDEBAR DRAWER */}
-      <Drawer
-        variant="permanent"
+      {/* SIDEBAR DRAWER (Slide-Over Overlay View) */}
+      <MuiDrawer
+        variant="temporary"
         open={open}
-        sx={open ? styles.drawerStyled : styles.hideDrawer}
+        onClose={toggleDrawer} // Closes drawer cleanly when clicking dark backdrop mask area
+        ModalProps={{
+          keepMounted: true, // Optimized performance rendering for mobile frame response
+        }}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 2, // Keeps overlay floating above the top header bar smoothly
+          "& .MuiDrawer-paper": {
+            width: 240,
+            boxSizing: "border-box",
+            backgroundColor: (theme) => theme.palette.background.paper,
+            boxShadow: "4px 0px 24px rgba(0,0,0,0.15)",
+          },
+        }}
       >
         <Toolbar sx={styles.toolBarStyled}>
           <IconButton onClick={toggleDrawer}>
@@ -87,32 +95,38 @@ const ParentDashboard = () => {
 
         <Divider />
 
+        {/* Clean wrapper passing down the toggle event callback instead of list bubbling */}
         <List component="nav">
-          <ParentSideBar />
+          <ParentSideBar closeDrawer={toggleDrawer} />
         </List>
-      </Drawer>
+      </MuiDrawer>
 
-      {/* MAIN CONTENT */}
-      <Box component="main" sx={styles.boxStyled}>
+      {/* MAIN CONTENT RUNTIME VIEWPORT */}
+      <Box 
+        component="main" 
+        sx={{
+          ...styles.boxStyled,
+          width: "100%", // Retains full 100% width grid allocation so data charts never squeeze
+        }}
+      >
         <Toolbar />
 
         <Routes>
-                    {/* Matches /Parent/dashboard */}
-                    <Route index element={<ParentAnalytics />} />
-                    
-                    {/* Matches /Parent/dashboard/analytics */}
-                    <Route path="analytics" element={<ParentAnalytics />} />
-                    
-                    {/* Matches /Parent/dashboard/profile */}
-                    <Route path="profile" element={<ParentProfile />} />
-                    <Route path="studentreport" element={<ParentViewStudent />} />
-                 
-                    <Route path="apply-leave" element={<ParentApplyLeave />} />
-                    <Route path="logout" element={<Logout />} />
-                    
-                    {/* Redirect back to analytics if route not found */}
-                    <Route path="*" element={<Navigate to="/Parent/dashboard" />} />
-                </Routes>
+          {/* Matches /Parent/dashboard */}
+          <Route index element={<ParentAnalytics />} />
+          
+          {/* Matches /Parent/dashboard/analytics */}
+          <Route path="analytics" element={<ParentAnalytics />} />
+          
+          {/* Matches /Parent/dashboard/profile */}
+          <Route path="profile" element={<ParentProfile />} />
+          <Route path="studentreport" element={<ParentViewStudent />} />
+          <Route path="apply-leave" element={<ParentApplyLeave />} />
+          <Route path="logout" element={<Logout />} />
+          
+          {/* Fallback redirect strategy back to baseline analytics view */}
+          <Route path="*" element={<Navigate to="/Parent/dashboard" />} />
+        </Routes>
       </Box>
     </Box>
   );
@@ -136,16 +150,5 @@ const styles = {
     alignItems: "center",
     justifyContent: "flex-end",
     px: [1],
-  },
-
-  drawerStyled: {
-    display: "flex",
-  },
-
-  hideDrawer: {
-    display: "flex",
-    "@media (max-width: 600px)": {
-      display: "none",
-    },
   },
 };

@@ -12,9 +12,7 @@ import { getAllSclasses } from '../../redux/sclassRelated/sclassHandle';
 import { getAllStudents } from '../../redux/studentRelated/studentHandle';
 import { getAllTeachers } from '../../redux/teacherRelated/teacherHandle';
 
-
-
- const BASE_URL = "https://sms-xi-rose.vercel.app";
+const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const AdminHomePage = () => {
     const dispatch = useDispatch();
@@ -28,30 +26,30 @@ const AdminHomePage = () => {
 
     const adminID = currentUser?._id;
   
-  useEffect(() => {
-    const fetchFees = async () => {
-        try {
-            const res = await fetch(`${BASE_URL}/AllFees`);
-            const data = await res.json();
-            
-            // Log data to console to verify structure
-            console.log("Fetched Fees Data:", data);
+    useEffect(() => {
+        const fetchFees = async () => {
+            try {
+                const res = await fetch(`${BASE_URL}/AllFees`);
+                const data = await res.json();
+                
+                // Log data to console to verify structure
+                console.log("Fetched Fees Data:", data);
 
-            // Handle both array and object formats
-            const actualFees = Array.isArray(data) ? data : (data.allFees || []);
-            
-            const total = actualFees.reduce((sum, fee) => {
-                const amount = Number(fee.amount);
-                return sum + (isNaN(amount) ? 0 : amount);
-            }, 0);
+                // Handle both array and object formats
+                const actualFees = Array.isArray(data) ? data : (data.allFees || []);
+                
+                const total = actualFees.reduce((sum, fee) => {
+                    const amount = Number(fee.amount);
+                    return sum + (isNaN(amount) ? 0 : amount);
+                }, 0);
 
-            setTotalFees(total);
-        } catch (error) {
-            console.log("Error fetching fees:", error);
-        }
-    };
-    fetchFees();
-}, []);
+                setTotalFees(total);
+            } catch (error) {
+                console.log("Error fetching fees:", error);
+            }
+        };
+        fetchFees();
+    }, []);
 
     useEffect(() => {
         if (adminID) {
@@ -66,8 +64,8 @@ const AdminHomePage = () => {
     const numberOfTeachers = teachersList?.length || 0;
 
     return (
-        <Container maxWidth="lg" sx={{ mt: { xs: 3, md: 6 }, mb: 4 }}>
-            <Typography variant="h5" sx={{ mb: 4, color: '#1e293b', fontWeight: 500, px: { xs: 1, md: 0 } }}>
+        <Container maxWidth="lg" sx={{ mt: { xs: 1, md: 4 }, mb: 4, px: { xs: 1, sm: 3 } }}>
+            <Typography variant="h5" sx={{ mb: { xs: 2, md: 4 }, color: '#1e293b', fontWeight: 500, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                 Welcome back, {currentUser?.name || "Admin"}!
             </Typography>
             
@@ -84,7 +82,7 @@ const AdminHomePage = () => {
                             <IconCircle color={item.color}>
                                 <img src={item.img} alt={item.title} />
                             </IconCircle>
-                            <Box>
+                            <Box sx={{ minWidth: 0, flexGrow: 1 }}>
                                 <StatLabel>{item.title}</StatLabel>
                                 <Counter end={item.count} prefix={item.prefix} />
                             </Box>
@@ -93,9 +91,9 @@ const AdminHomePage = () => {
                 ))}
 
                 {/* Modernized Noticeboard */}
-                <Grid item xs={12} sx={{ mt: 2 }}>
+                <Grid item xs={12} sx={{ mt: { xs: 1, md: 2 } }}>
                     <NoticeSection elevation={0}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, md: 3 } }}>
                             <Indicator />
                             <Typography variant="h6" sx={{ color: '#334155', fontSize: '1.1rem' }}>
                                 School Noticeboard
@@ -153,7 +151,7 @@ const StatCard = styled(Paper)`
   }
 
   @media (max-width: 600px) {
-    padding: 18px;
+    padding: 16px;
   }
 `;
 
@@ -162,16 +160,28 @@ const IconCircle = styled.div`
   height: 52px;
   border-radius: 50%;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   background-color: ${props => props.color}08; /* Ultra-light tint */
   border: 1px solid ${props => props.color}20;
   margin-right: 20px;
 
+  @media (max-width: 600px) {
+    width: 44px;
+    height: 44px;
+    margin-right: 14px;
+  }
+
   img {
     width: 26px;
     height: 26px;
     filter: grayscale(0.2); /* Softens the image icons for a pro look */
+
+    @media (max-width: 600px) {
+        width: 22px;
+        height: 22px;
+    }
   }
 `;
 
@@ -187,6 +197,13 @@ const CountValue = styled.p`
   color: #0f172a;
   margin: 2px 0 0 0;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: 600px) {
+    font-size: 1.25rem;
+  }
 `;
 
 const NoticeSection = styled(Paper)`
@@ -196,7 +213,7 @@ const NoticeSection = styled(Paper)`
   background: #ffffff !important;
 
   @media (max-width: 600px) {
-    padding: 20px;
+    padding: 16px;
   }
 `;
 

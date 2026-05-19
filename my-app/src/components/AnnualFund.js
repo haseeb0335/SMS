@@ -2,10 +2,9 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { 
     IconButton, TextField, Button, Typography, Paper, MenuItem, Table,
     TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Stack,
-    Grid, Chip, InputAdornment, Card
+    Grid, Card, CardContent, InputAdornment, useTheme, useMediaQuery
 } from "@mui/material";
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import SearchIcon from "@mui/icons-material/Search";
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -17,11 +16,12 @@ import { toast, ToastContainer } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
 const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const AnnualFund = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     const [classes, setClasses] = useState([]);
     const [students, setStudents] = useState([]);
     const [fundRecords, setFundRecords] = useState([]);
@@ -64,7 +64,6 @@ const AnnualFund = () => {
         const student = students.find(s => s._id === studentId);
         if (student) {
             setFatherName(student.fatherName || "");
-            // Optionally auto-fill whatsapp if available in student record
             setWhatsappNumber(student.phoneNum || ""); 
         }
     };
@@ -117,7 +116,6 @@ const AnnualFund = () => {
                 await axios.post(`${BASE_URL}/CollectAnnualFund`, data);
                 toast.success("Fund Collected Successfully!");
                 
-                // WhatsApp Logic
                 if (whatsappNumber) {
                     const msg = `*ANNUAL FUND RECEIPT*%0A*School:* ${schoolName}%0A*Student:* ${data.studentName}%0A*Amount:* Rs. ${data.amount}%0A*Status:* Paid. Thank you!`;
                     window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
@@ -148,74 +146,122 @@ const AnnualFund = () => {
         }, {});
     }, [fundRecords, searchTerm]);
 
-    const chartData = {
-        labels: Object.keys(groupedFunds),
-        datasets: [{
-            label: 'Collection by Class',
-            data: Object.values(groupedFunds).map(recs => recs.reduce((s, r) => s + r.amount, 0)),
-            backgroundColor: '#2563eb',
-            borderRadius: 5
-        }]
-    };
+    // Format structure for Recharts dataset
+    const computedChartData = useMemo(() => {
+        return Object.keys(groupedFunds).map(cls => ({
+            name: cls,
+            total: groupedFunds[cls].reduce((s, r) => s + r.amount, 0)
+        })).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    }, [groupedFunds]);
+
+    const overallTotal = useMemo(() => {
+        return fundRecords.reduce((s, r) => s + r.amount, 0);
+    }, [fundRecords]);
 
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
-            <Typography variant="h4" fontWeight={900} gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <WorkspacePremiumIcon fontSize="large" color="primary" /> Annual Fund Portal
+        <Box sx={{ p: { xs: 1.5, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+            <Typography variant="h4" fontWeight={900} color="#1e293b" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' }, mb: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <WorkspacePremiumIcon sx={{ fontSize: { xs: 28, sm: 36 }, color: '#3b82f6' }} /> Annual Fund Portal
             </Typography>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} md={8}>
-                    <Paper sx={{ p: 3, borderRadius: 4, height: 300 }}>
-                        <Bar data={chartData} options={{ maintainAspectRatio: false }} />
-                    </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ p: 3, bgcolor: '#1e293b', color: 'white', borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <Typography variant="h6" sx={{ opacity: 0.8 }}>Total Collection</Typography>
-                        <Typography variant="h3" fontWeight={900}>Rs. {fundRecords.reduce((s, r) => s + r.amount, 0).toLocaleString()}</Typography>
-                    </Card>
-                </Grid>
-            </Grid>
+            {/* Dashboard Analytics Side-By-Side Header */}
+            <Stack 
+                direction="row" 
+                spacing={{ xs: 1.5, md: 3 }} 
+                sx={{ mb: 4, width: '100%', alignItems: 'stretch' }}
+            >
+                {/* Metrics Summary Box */}
+                <Card sx={{ flex: 1, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CardContent sx={{ textAlign: 'center', p: { xs: 1.5, md: 3 }, '&:last-child': { pb: { xs: 1.5, md: 3 } } }}>
+                        <WorkspacePremiumIcon sx={{ fontSize: { xs: 26, md: 40 }, color: '#3b82f6', mb: 0.5 }} />
+                        <Typography color="textSecondary" variant="overline" fontWeight="800" sx={{ display: 'block', fontSize: { xs: '0.6rem', md: '0.75rem' }, lineHeight: 1.2, letterSpacing: 0.5 }}>Total Collected</Typography>
+                        <Typography variant="h6" fontWeight="900" sx={{ color: '#0f172a', mt: 0.5, fontSize: { xs: '0.85rem', sm: '1.3rem', md: '1.65rem' }, whiteSpace: 'nowrap' }}>
+                            Rs. {overallTotal.toLocaleString()}
+                        </Typography>
+                    </CardContent>
+                </Card>
 
-            <Paper sx={{ p: 4, mb: 4, borderRadius: 4 }}>
+                {/* Premium Micro-Sized Bar Chart */}
+                <Paper sx={{ flex: { xs: 1.8, md: 2 }, p: { xs: 1.5, md: 2.5 }, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', height: { xs: 130, sm: 180, md: 220 }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Typography variant="subtitle2" fontWeight="800" color="text.secondary" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: { xs: '0.6rem', md: '0.75rem' } }}>Collection by Class</Typography>
+                    <ResponsiveContainer width="100%" height="85%">
+                        <BarChart data={computedChartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: isMobile ? 8 : 10, fontWeight: 600}} />
+                            <YAxis axisLine={false} tickLine={false} hide />
+                            <ChartTooltip cursor={{fill: 'rgba(59, 130, 246, 0.04)'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.06)', fontSize: '11px' }} />
+                            <Bar dataKey="total" fill="#3b82f6" radius={[10, 10, 0, 0]} barSize={isMobile ? 12 : 16} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </Paper>
+            </Stack>
+
+            {/* Input Form Fields Box */}
+            <Paper sx={{ p: { xs: 2, md: 4 }, mb: 4, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
                 <Grid container spacing={2}>
-                    
                     <Grid item xs={12} md={3}><TextField select fullWidth label="Class" value={selectedClass} onChange={e => setSelectedClass(e.target.value)}>{classes.map(c => <MenuItem key={c._id} value={c._id}>{c.sclassName}</MenuItem>)}</TextField></Grid>
                     <Grid item xs={12} md={3}><TextField select fullWidth label="Student" value={selectedStudent} onChange={e => handleStudentChange(e.target.value)} disabled={!selectedClass}>{students.map(s => <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>)}</TextField></Grid>
                     <Grid item xs={12} md={3}><TextField fullWidth label="Father Name" value={fatherName} onChange={e => setFatherName(e.target.value)} /></Grid>
-                    <Grid item xs={12} md={4}><TextField fullWidth label="WhatsApp Number" placeholder="923001234567" value={whatsappNumber} onChange={e => setWhatsappNumber(e.target.value)} /></Grid>
-                    
+                    <Grid item xs={12} md={3}><TextField fullWidth label="WhatsApp Number" placeholder="923001234567" value={whatsappNumber} onChange={e => setWhatsappNumber(e.target.value)} /></Grid>
                     <Grid item xs={12} md={4}><TextField fullWidth label="Amount" type="number" value={fundAmount} onChange={e => setFundAmount(e.target.value)} /></Grid>
-                    <Grid item xs={12} md={3}><TextField fullWidth label="Collector Name" value={collectorName} onChange={e => setCollectorName(e.target.value)} /></Grid>
-                    <Grid item xs={12} md={4}><Button variant="contained" fullWidth sx={{ height: 56, fontWeight: 700 }} onClick={handleSubmission} startIcon={<WhatsAppIcon />}>{editId ? "Update Record" : "Submit & Notify"}</Button></Grid>
+                    <Grid item xs={12} md={4}><TextField fullWidth label="Collector Name" value={collectorName} onChange={e => setCollectorName(e.target.value)} /></Grid>
+                    <Grid item xs={12} md={4}>
+                        <Button variant="contained" fullWidth sx={{ height: 56, borderRadius: '12px', fontWeight: 700, textTransform: 'none', bgcolor: '#3b82f6', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }} onClick={handleSubmission} startIcon={<WhatsAppIcon />}>
+                            {editId ? "Update Record" : "Submit & Notify"}
+                        </Button>
+                    </Grid>
                 </Grid>
             </Paper>
 
-            <TextField placeholder="Search Students..." fullWidth sx={{ mb: 3, bgcolor: 'white' }} onChange={e => setSearchTerm(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
+            {/* Search filter wrapper input */}
+            <TextField 
+                placeholder="Search Students..." 
+                fullWidth 
+                sx={{ mb: 3, bgcolor: 'white', borderRadius: '12px', '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} 
+                onChange={e => setSearchTerm(e.target.value)} 
+                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} 
+            />
 
+            {/* Render Lists nested collections */}
             {Object.entries(groupedFunds).map(([className, records]) => (
-                <Card key={className} sx={{ mb: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                    <Box sx={{ p: 2, bgcolor: '#f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography fontWeight={800}>{className}</Typography>
-                        <Typography color="primary" fontWeight={700}>Collector: {records[0]?.collectorName || "Admin"}</Typography>
+                <Card key={className} sx={{ mb: 3, borderRadius: '16px', overflow: 'hidden', boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+                    <Box sx={{ p: 2, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography fontWeight={800} color="#0f172a">{className}</Typography>
+                        <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ bgcolor: '#f1f5f9', px: 1.5, py: 0.5, borderRadius: '8px' }}>
+                            Collector: {records[0]?.collectorName || "Admin"}
+                        </Typography>
                     </Box>
                     <TableContainer>
                         <Table size="small">
-                            <TableHead><TableRow><TableCell>Student / Father</TableCell><TableCell>Date</TableCell><TableCell>Amount</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: '700', color: '#64748b', py: 1.5 }}>Student / Father</TableCell>
+                                    <TableCell sx={{ fontWeight: '700', color: '#64748b', py: 1.5 }}>Date</TableCell>
+                                    <TableCell sx={{ fontWeight: '700', color: '#64748b', py: 1.5 }}>Amount</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: '700', color: '#64748b', py: 1.5 }}>Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
                             <TableBody>
                                 {records.map((r) => (
-                                    <TableRow key={r._id} hover>
-                                        <TableCell>
-                                            <Typography variant="body2" fontWeight={700}>{r.studentName}</Typography>
+                                    <TableRow key={r._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                        <TableCell sx={{ py: 1.5 }}>
+                                            <Typography variant="body2" fontWeight={700} color="#0f172a">{r.studentName}</Typography>
                                             <Typography variant="caption" color="textSecondary">S/O: {r.fatherName}</Typography>
                                         </TableCell>
-                                        <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
-                                        <TableCell sx={{ fontWeight: 800, color: 'success.main' }}>Rs. {r.amount}</TableCell>
-                                        <TableCell align="right">
-                                            <IconButton color="primary" onClick={() => { setEditId(r._id); handleStudentChange(r.studentId); setFundAmount(r.amount); window.scrollTo(0,0); }}><EditIcon fontSize="small" /></IconButton>
-                                            <IconButton color="error" onClick={() => downloadPDF(r)}><PictureAsPdfIcon fontSize="small" /></IconButton>
-                                            <IconButton color="error" onClick={() => axios.put(`${BASE_URL}/DeleteFee/${r._id}`).then(fetchData)}><DeleteIcon fontSize="small" /></IconButton>
+                                        <TableCell sx={{ py: 1.5, fontWeight: '500', color: '#334155' }}>{new Date(r.date).toLocaleDateString()}</TableCell>
+                                        <TableCell sx={{ py: 1.5, fontWeight: 800, color: '#10b981' }}>Rs. {r.amount}</TableCell>
+                                        <TableCell align="center" sx={{ py: 1.5 }}>
+                                            <Stack direction="row" spacing={0.5} justifyContent="center">
+                                                <IconButton color="primary" onClick={() => { setEditId(r._id); handleStudentChange(r.studentId); setFundAmount(r.amount); window.scrollTo({ top: 0, behavior: 'smooth' }); }} sx={{ p: 1 }}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton color="secondary" onClick={() => downloadPDF(r)} sx={{ p: 1 }}>
+                                                    <PictureAsPdfIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton color="error" onClick={() => axios.put(`${BASE_URL}/DeleteFee/${r._id}`).then(fetchData)} sx={{ p: 1 }}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Stack>
                                         </TableCell>
                                     </TableRow>
                                 ))}

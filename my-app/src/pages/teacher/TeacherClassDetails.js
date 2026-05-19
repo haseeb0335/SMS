@@ -124,21 +124,21 @@ const TeacherClassDetails = () => {
                             color: 'white' 
                         }}
                     >
-                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={2}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
                             <Box>
                                 <Stack direction="row" spacing={1} alignItems="center">
                                     <SchoolIcon />
-                                    <Typography variant="h4" fontWeight="800">
+                                    <Typography variant="h4" fontWeight="800" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
                                         {className}
                                     </Typography>
                                 </Stack>
-                                <Typography variant="h6" sx={{ opacity: 0.8 }}>
+                                <Typography variant="h6" sx={{ opacity: 0.8, mt: 0.5, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                                     Subject: {subjectName}
                                 </Typography>
                             </Box>
                             <Chip 
                                 label={`${sclassStudents?.length || 0} Students`} 
-                                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 'bold' }} 
+                                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 'bold', alignSelf: { xs: 'flex-start', sm: 'center' } }} 
                             />
                         </Stack>
                     </Paper>
@@ -149,7 +149,8 @@ const TeacherClassDetails = () => {
                         sx={{ 
                             p: { xs: 2, md: 3 }, 
                             borderRadius: '24px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                            overflow: 'hidden' // Prevents layout tables from breaking structural borders on standard viewports
                         }}
                     >
                         <Stack direction="row" spacing={1} alignItems="center" mb={3}>
@@ -158,11 +159,13 @@ const TeacherClassDetails = () => {
                         </Stack>
 
                         {Array.isArray(sclassStudents) && sclassStudents.length > 0 ? (
-                            <TableTemplate
-                                buttonHaver={StudentsButtonHaver}
-                                columns={studentColumns}
-                                rows={studentRows}
-                            />
+                            <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                                <TableTemplate
+                                    buttonHaver={StudentsButtonHaver}
+                                    columns={studentColumns}
+                                    rows={studentRows}
+                                />
+                            </Box>
                         ) : (
                             <Typography align="center" sx={{ py: 10 }} color="text.secondary">
                                 No students found in this class.

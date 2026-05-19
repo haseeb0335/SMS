@@ -2,9 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { 
     Box, Typography, Paper, Grid, TextField, Button, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    IconButton, Accordion, AccordionSummary, AccordionDetails, Card, CardContent
+    IconButton, Accordion, AccordionSummary, AccordionDetails, Card, CardContent,
+    useTheme, useMediaQuery, Stack
 } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -15,10 +16,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axios from 'axios';
 
-// Base URL for your deployed backend
 const BASE_URL = "https://sms-xi-rose.vercel.app";
 
 const AdmissionFees = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     const [formData, setFormData] = useState({
         studentName: '', fatherName: '', dob: '', whatsapp: '',
         className: '', feeAmount: '', discount: '', 
@@ -28,7 +31,6 @@ const AdmissionFees = () => {
     const [records, setRecords] = useState([]);
     const [editIndex, setEditIndex] = useState(null);
 
-    // FETCH: Get all admissions from the DB
     const fetchAdmissions = async () => {
         try {
             const res = await axios.get(`${BASE_URL}/Admissions`);
@@ -59,8 +61,6 @@ const AdmissionFees = () => {
         };
     }, [records]);
 
-    const COLORS = ['#1a237e', '#283593', '#303f9f', '#3949ab', '#3f51b5'];
-
     const sendWhatsAppMessage = (data) => {
         const phoneNumber = data.whatsapp.replace(/\D/g, ''); 
         if (!phoneNumber) return;
@@ -89,31 +89,28 @@ const AdmissionFees = () => {
         doc.save("All_Admissions.pdf");
     };
 
-   const downloadIndividualPDF = (student) => {
+    const downloadIndividualPDF = (student) => {
         const doc = new jsPDF();
-        
-        // 1. School Header
         doc.setFontSize(22);
         doc.setFont("helvetica", "bold");
-        doc.text("Allied School system", 105, 20, { align: 'center' }); //
+        doc.text("Allied School system", 105, 20, { align: 'center' }); 
         
         doc.setFontSize(14);
         doc.setFont("helvetica", "normal");
-        doc.text("Admission Receipt", 105, 30, { align: 'center' }); //
+        doc.text("Admission Receipt", 105, 30, { align: 'center' }); 
 
-        // 2. Receipt Table with Breakdown
         autoTable(doc, {
             startY: 40,
             body: [
-                ['Student Name', student.studentName], //
-                ['Father Name', student.fatherName], //
-                ['Class', student.className], //
+                ['Student Name', student.studentName], 
+                ['Father Name', student.fatherName], 
+                ['Class', student.className], 
                 ['------------------', '------------------'],
                 ['Admission Fee', `RS ${student.feeAmount}`],
                 ['Annual Fund', `RS ${student.annualFund || 0}`],
                 ['Discount', `- RS ${student.discount || 0}`],
                 ['------------------', '------------------'],
-                ['Total Net Paid', `RS ${Number(student.feeAmount) - Number(student.discount || 0) + Number(student.annualFund || 0)}`] //
+                ['Total Net Paid', `RS ${Number(student.feeAmount) - Number(student.discount || 0) + Number(student.annualFund || 0)}`] 
             ],
             theme: 'striped',
             styles: { fontSize: 11 },
@@ -123,21 +120,18 @@ const AdmissionFees = () => {
             headStyles: { fillColor: [30, 41, 59] }
         });
 
-        // 3. Paid Stamp
         const finalY = doc.lastAutoTable.finalY + 20;
-        doc.setDrawColor(220, 38, 38); // Red color
+        doc.setDrawColor(220, 38, 38); 
         doc.setLineWidth(1.5);
-        doc.rect(140, finalY, 40, 15); // Draw stamp box
+        doc.rect(140, finalY, 40, 15); 
         
         doc.setTextColor(220, 38, 38);
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
         doc.text("PAID", 160, finalY + 10, { align: 'center' });
         
-        // Reset text color for safety
         doc.setTextColor(0, 0, 0);
-
-        doc.save(`${student.studentName}_Receipt.pdf`); //
+        doc.save(`${student.studentName}_Receipt.pdf`); 
     };
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -186,7 +180,6 @@ const AdmissionFees = () => {
     };
 
     const groupedRecords = records.reduce((acc, record) => {
-        // Normalizing class names to fix "class 1" vs "class1"
         const normalizedClass = record.className.trim().toLowerCase().replace(/\s+/g, ' ');
         if (!acc[normalizedClass]) acc[normalizedClass] = [];
         acc[normalizedClass].push(record);
@@ -194,48 +187,56 @@ const AdmissionFees = () => {
     }, {});
 
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 4 }}>
-                <Typography variant="h4" fontWeight="800" color="#1e293b">Admissions</Typography>
-                <Button variant="contained" startIcon={<FileDownloadIcon />} onClick={downloadOverallPDF} disabled={records.length === 0} sx={{ borderRadius: '12px', px: 3, py: 1, textTransform: 'none', bgcolor: '#1e293b' }}>
+        <Box sx={{ p: { xs: 1.5, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+            {/* Header Content */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
+                <Typography variant="h4" fontWeight="900" color="#1e293b" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>Admissions</Typography>
+                <Button 
+                    variant="contained" 
+                    startIcon={<FileDownloadIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />} 
+                    onClick={downloadOverallPDF} 
+                    disabled={records.length === 0} 
+                    sx={{ borderRadius: '12px', px: 3, py: 1.2, textTransform: 'none', bgcolor: '#1e293b', width: { xs: '100%', sm: 'auto' } }}
+                >
                     Export All
                 </Button>
             </Box>
 
-            {/* Dashboard Cards */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', height: '100%' }}>
-                        <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                            <AccountBalanceWalletIcon sx={{ fontSize: 48, color: '#3b82f6', mb: 1 }} />
-                            <Typography color="textSecondary" variant="overline" fontWeight="700">Total Collection</Typography>
-                            <Typography variant="h3" fontWeight="800" sx={{ color: '#0f172a' }}>RS {stats.total.toLocaleString()}</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} md={8}>
-                    <Paper sx={{ p: 3, borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', height: { xs: 250, md: 300 } }}>
-                        <Typography variant="subtitle2" fontWeight="700" sx={{ mb: 2 }}>Revenue by Class</Typography>
-                        <ResponsiveContainer width="100%" height="90%">
-                            <BarChart data={stats.chartData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                                <ChartTooltip cursor={{fill: '#f1f5f9'}} contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                                <Bar dataKey="total" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={40}>
-                                    {stats.chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Paper>
-                </Grid>
-            </Grid>
+            {/* Dashboard Cards Side-by-Side Analytics Container */}
+            <Stack 
+                direction="row" 
+                spacing={{ xs: 1.5, md: 3 }} 
+                sx={{ mb: 4, width: '100%', alignItems: 'stretch' }}
+            >
+                {/* Total Collection Box */}
+                <Card sx={{ flex: 1, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CardContent sx={{ textAlign: 'center', p: { xs: 1.5, md: 3 }, '&:last-child': { pb: { xs: 1.5, md: 3 } } }}>
+                        <AccountBalanceWalletIcon sx={{ fontSize: { xs: 26, md: 40 }, color: '#3b82f6', mb: 0.5 }} />
+                        <Typography color="textSecondary" variant="overline" fontWeight="800" sx={{ display: 'block', fontSize: { xs: '0.6rem', md: '0.75rem' }, lineHeight: 1.2, letterSpacing: 0.5 }}>Total Paid</Typography>
+                        <Typography variant="h6" fontWeight="900" sx={{ color: '#0f172a', mt: 0.5, fontSize: { xs: '0.85rem', sm: '1.3rem', md: '1.65rem' }, whiteSpace: 'nowrap' }}>
+                            RS {stats.total.toLocaleString()}
+                        </Typography>
+                    </CardContent>
+                </Card>
 
-            {/* Form */}
-            <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: '16px', mb: 4, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
-                <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>Student Information</Typography>
+                {/* Micro-Sized Premium Graph Analytics Box */}
+                <Paper sx={{ flex: { xs: 1.8, md: 2 }, p: { xs: 1.5, md: 2.5 }, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', height: { xs: 130, sm: 180, md: 220 }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Typography variant="subtitle2" fontWeight="800" color="text.secondary" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: { xs: '0.6rem', md: '0.75rem' } }}>Revenue by Class</Typography>
+                    <ResponsiveContainer width="100%" height="85%">
+                        <BarChart data={stats.chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: isMobile ? 8 : 10, fontWeight: 600}} />
+                            <YAxis axisLine={false} tickLine={false} hide />
+                            <ChartTooltip cursor={{fill: 'rgba(59, 130, 246, 0.04)'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.06)', fontSize: '11px' }} />
+                            <Bar dataKey="total" fill="#3b82f6" radius={[10, 10, 0, 0]} barSize={isMobile ? 12 : 16} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </Paper>
+            </Stack>
+
+            {/* Application Data Form */}
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '20px', border: '1px solid #e2e8f0', mb: 4, boxShadow: 'none' }}>
+                <Typography variant="h6" fontWeight="800" color="#1e293b" sx={{ mb: 3 }}>Student Information</Typography>
                 <form onSubmit={handleSubmit}>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6} md={3}><TextField fullWidth label="Student Name" name="studentName" value={formData.studentName} onChange={handleChange} required /></Grid>
@@ -248,7 +249,7 @@ const AdmissionFees = () => {
                         <Grid item xs={6} sm={6} md={3}><TextField fullWidth type="number" label="Security" name="securityDeposit" value={formData.securityDeposit} onChange={handleChange} /></Grid>
                         <Grid item xs={12} sm={6} md={3}><TextField fullWidth type="number" label="Annual Fund" name="annualFund" value={formData.annualFund} onChange={handleChange} /></Grid>
                         <Grid item xs={12}>
-                            <Button type="submit" variant="contained" size="large" fullWidth sx={{ py: 1.8, borderRadius: '12px', fontWeight: '700', textTransform: 'none', fontSize: '1rem', bgcolor: '#3b82f6' }}>
+                            <Button type="submit" variant="contained" size="large" fullWidth sx={{ py: 1.8, borderRadius: '12px', fontWeight: '800', textTransform: 'none', fontSize: '0.95rem', bgcolor: '#3b82f6', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
                                 {editIndex !== null ? "Update Record" : "Confirm & Send WhatsApp"}
                             </Button>
                         </Grid>
@@ -256,50 +257,52 @@ const AdmissionFees = () => {
                 </form>
             </Paper>
 
-            {/* List */}
+            {/* Custom Responsive Nested Group Lists */}
             {Object.keys(groupedRecords).sort().map((classKey) => (
-                <Accordion key={classKey} sx={{ mb: 1.5, borderRadius: '12px !important', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-                    <AccordionSummary expandMoreIcon={<ExpandMoreIcon />}>
-                        <Typography fontWeight="700" sx={{ flexGrow: 1, textTransform: 'capitalize' }}>{classKey}</Typography>
-                        <Typography variant="body2" color="textSecondary">{groupedRecords[classKey].length} Students</Typography>
+                <Accordion key={classKey} sx={{ mb: 2, borderRadius: '16px !important', border: '1px solid #e2e8f0', boxShadow: 'none', '&::before': { display: 'none' } }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />}>
+                        <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" sx={{ width: '100%', pr: 1 }}>
+                            <Typography fontWeight="800" sx={{ textTransform: 'capitalize', color: '#0f172a' }}>{classKey}</Typography>
+                            <Typography variant="body2" fontWeight="700" color="text.secondary" sx={{ bgcolor: '#f1f5f9', px: 1.5, py: 0.5, borderRadius: '8px' }}>{groupedRecords[classKey].length} Students</Typography>
+                        </Stack>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ p: 0 }}>
-                        <TableContainer>
+                    <AccordionDetails sx={{ p: 0, borderTop: '1px solid #f1f5f9' }}>
+                        <TableContainer sx={{ overflowX: 'auto' }}>
                             <Table size="small">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell sx={{ fontWeight: '700', bgcolor: '#f8fafc' }}>Student</TableCell>
-                                        <TableCell sx={{ fontWeight: '700', bgcolor: '#f8fafc' }}>Payment Breakdown</TableCell>
-                                        <TableCell align="center" sx={{ fontWeight: '700', bgcolor: '#f8fafc' }}>Actions</TableCell>
+                                        <TableCell sx={{ fontWeight: '700', bgcolor: '#f8fafc', py: 1.5 }}>Student</TableCell>
+                                        <TableCell sx={{ fontWeight: '700', bgcolor: '#f8fafc', py: 1.5 }}>Payment Breakdown</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: '700', bgcolor: '#f8fafc', py: 1.5, whiteSpace: 'nowrap' }}>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {groupedRecords[classKey].map((row, index) => (
                                         <TableRow key={index} hover>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight="600">{row.studentName}</Typography>
-                                                <Typography variant="caption" color="textSecondary">{row.fatherName}</Typography>
+                                            <TableCell sx={{ py: 1.5, minWidth: '140px' }}>
+                                                <Typography variant="body2" fontWeight="700" color="#0f172a">{row.studentName}</Typography>
+                                                <Typography variant="caption" fontWeight="500" color="textSecondary">{row.fatherName}</Typography>
                                             </TableCell>
-                                            <TableCell>
-                                                <Typography variant="caption" color="textSecondary" sx={{ fontWeight: '700', display: 'block' }}>
+                                            <TableCell sx={{ py: 1.5, minWidth: '220px' }}>
+                                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: '600', display: 'block', mb: 0.2 }}>
                                                     Fee: RS {row.feeAmount} | Disc: RS {row.discount || 0} | Annual: RS {row.annualFund || 0}
                                                 </Typography>
-                                                <Typography variant="body2" sx={{ fontWeight: '700', color: '#10b981' }}>
+                                                <Typography variant="body2" sx={{ fontWeight: '800', color: '#10b981' }}>
                                                     Net Paid: RS {Number(row.feeAmount) - Number(row.discount || 0) + Number(row.annualFund || 0)}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell align="center">
-                                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                                    <IconButton size="small" onClick={() => downloadIndividualPDF(row)} color="secondary">
-                                                        <PictureAsPdfIcon fontSize="small" />
+                                            <TableCell align="center" sx={{ py: 1.5 }}>
+                                                <Stack direction="row" spacing={0.5} justifyContent="center" sx={{ flexWrap: 'nowrap' }}>
+                                                    <IconButton size="small" onClick={() => downloadIndividualPDF(row)} color="secondary" sx={{ p: { xs: 1, sm: 1.2 } }}>
+                                                        <PictureAsPdfIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                                                     </IconButton>
-                                                    <IconButton size="small" onClick={() => { setFormData(row); setEditIndex(records.indexOf(row)); }} color="primary">
-                                                        <EditIcon fontSize="small" />
+                                                    <IconButton size="small" onClick={() => { setFormData(row); setEditIndex(records.indexOf(row)); }} color="primary" sx={{ p: { xs: 1, sm: 1.2 } }}>
+                                                        <EditIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                                                     </IconButton>
-                                                    <IconButton size="small" onClick={() => handleDelete(row)} color="error">
-                                                        <DeleteIcon fontSize="small" />
+                                                    <IconButton size="small" onClick={() => handleDelete(row)} color="error" sx={{ p: { xs: 1, sm: 1.2 } }}>
+                                                        <DeleteIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                                                     </IconButton>
-                                                </Box>
+                                                </Stack>
                                             </TableCell>
                                         </TableRow>
                                     ))}

@@ -24,13 +24,13 @@ const AdminAccounts = () => {
                 <Button 
                     startIcon={<ArrowBackIcon />} 
                     onClick={() => setSelectedSection(null)} 
-                    sx={{ mb: 3, fontWeight: 'bold', borderRadius: '10px' }}
+                    sx={{ mb: 3, fontWeight: 'bold', borderRadius: '10px', width: { xs: '100%', sm: 'auto' } }}
                     variant="outlined"
                 >
                     Back to Accounts
                 </Button>
                 
-                <Typography variant="h5" sx={{ mb: 3, fontWeight: 800, color: '#1e293b' }}>
+                <Typography variant="h5" sx={{ mb: 3, fontWeight: 800, color: '#1e293b', fontSize: { xs: '1.5rem', sm: '1.825rem' } }}>
                     Fee Management
                 </Typography>
 
@@ -52,7 +52,7 @@ const AdminAccounts = () => {
                                     <ListItemIcon sx={{ minWidth: 45 }}>{item.icon}</ListItemIcon>
                                     <ListItemText 
                                         primary={item.text} 
-                                        primaryTypographyProps={{ fontWeight: 600, color: '#334155' }} 
+                                        primaryTypographyProps={{ fontWeight: 600, color: '#334155', fontSize: { xs: '0.95rem', sm: '1rem' } }} 
                                     />
                                     <ChevronRightIcon sx={{ color: '#cbd5e1' }} />
                                 </ListItemButton>
@@ -74,10 +74,10 @@ const AdminAccounts = () => {
             {!selectedSection ? (
                 <>
                     <Box sx={{ mb: 5 }}>
-                        <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', letterSpacing: '-0.5px' }}>
+                        <Typography variant="h4" sx={{ fontWeight: 900, color: '#1e293b', letterSpacing: '-0.5px', fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
                             School Accounts
                         </Typography>
-                        <Typography variant="body1" sx={{ color: '#64748b', mt: 1 }}>
+                        <Typography variant="body1" sx={{ color: '#64748b', mt: 1, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
                             Manage fees, expenses, and payroll from a single dashboard.
                         </Typography>
                     </Box>
@@ -86,36 +86,36 @@ const AdminAccounts = () => {
                         <Grid item xs={12} sm={6} md={3}>
                             <Paper onClick={() => setSelectedSection('fees')} sx={cardStyle('#3b82f6')}>
                                 <Box sx={iconWrapperStyle('#eff6ff')}>
-                                    <PaymentsIcon sx={{ fontSize: 32, color: '#3b82f6' }} />
+                                    <PaymentsIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: '#3b82f6' }} />
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700 }}>Fees</Typography>
+                                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>Fees</Typography>
                             </Paper>
                         </Grid>
 
                         <Grid item xs={12} sm={6} md={3}>
                             <Paper component={Link} to="/Admin/expenses" sx={{ ...cardStyle('#ef4444'), textDecoration: 'none', color: 'inherit' }}>
                                 <Box sx={iconWrapperStyle('#fef2f2')}>
-                                    <MoneyOffIcon sx={{ fontSize: 32, color: '#ef4444' }} />
+                                    <MoneyOffIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: '#ef4444' }} />
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700 }}>Expenses</Typography>
+                                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>Expenses</Typography>
                             </Paper>
                         </Grid>
 
                         <Grid item xs={12} sm={6} md={3}>
                             <Paper component={Link} to="/Admin/teacher-salary" sx={{ ...cardStyle('#22c55e'), textDecoration: 'none', color: 'inherit' }}>
                                 <Box sx={iconWrapperStyle('#f0fdf4')}>
-                                    <WorkHistoryIcon sx={{ fontSize: 32, color: '#22c55e' }} />
+                                    <WorkHistoryIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: '#22c55e' }} />
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700 }}>Salaries</Typography>
+                                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>Salaries</Typography>
                             </Paper>
                         </Grid>
 
                         <Grid item xs={12} sm={6} md={3}>
                             <Paper sx={cardStyle('#f59e0b')}>
                                 <Box sx={iconWrapperStyle('#fffbeb')}>
-                                    <AccountBalanceIcon sx={{ fontSize: 32, color: '#f59e0b' }} />
+                                    <AccountBalanceIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: '#f59e0b' }} />
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700 }}>Others</Typography>
+                                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>Others</Typography>
                             </Paper>
                         </Grid>
                     </Grid>
@@ -127,16 +127,16 @@ const AdminAccounts = () => {
     );
 };
 
-// Modern dynamic card styles
+// Modern dynamic card styles optimized for native app feel on mobile
 const cardStyle = (color) => ({
-    p: 4,
+    p: { xs: 2.5, sm: 4 },
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: { xs: 'row', sm: 'column' },
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 1.5,
+    justifyContent: { xs: 'flex-start', sm: 'center' },
+    gap: 2,
     cursor: 'pointer',
-    borderRadius: '24px',
+    borderRadius: { xs: '16px', sm: '24px' },
     border: '1px solid #f1f5f9',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     background: '#ffffff',
@@ -149,14 +149,14 @@ const cardStyle = (color) => ({
 });
 
 const iconWrapperStyle = (bgColor) => ({
-    width: 70,
-    height: 70,
-    borderRadius: '20px',
+    width: { xs: 48, sm: 70 },
+    height: { xs: 48, sm: 70 },
+    borderRadius: { xs: '12px', sm: '20px' },
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     bgcolor: bgColor,
-    mb: 1
+    flexShrink: 0
 });
 
 export default AdminAccounts;

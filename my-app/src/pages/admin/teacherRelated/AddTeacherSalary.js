@@ -222,12 +222,12 @@ const AddTeacherSalary = () => {
       
       <Grid container spacing={4} justifyContent="center">
         <Grid item xs={12} xl={11}>
-          <Paper sx={{ p: { xs: 3, md: 5 }, borderRadius: '24px', mb: 4 }} elevation={0} variant="outlined">
+          <Paper sx={{ p: { xs: 2.5, md: 5 }, borderRadius: '24px', mb: 4 }} elevation={0} variant="outlined">
             <Stack direction="row" alignItems="center" spacing={2} mb={4}>
               <Box sx={{ bgcolor: 'primary.main', p: 1.5, borderRadius: '12px', display: 'flex' }}>
                 <AccountBalanceWalletIcon sx={{ color: '#fff' }} fontSize="medium" />
               </Box>
-              <Typography variant="h4" fontWeight="900" sx={{ letterSpacing: '-0.5px' }}>Salary Portal</Typography>
+              <Typography variant="h4" fontWeight="900" sx={{ letterSpacing: '-0.5px', fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>Salary Portal</Typography>
             </Stack>
 
             <Grid container spacing={3}>
@@ -268,68 +268,89 @@ const AddTeacherSalary = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Button 
-                    variant="contained" 
-                    size="large" 
-                    onClick={handleSave} 
-                    sx={{ py: 2, px: 10, borderRadius: '12px', fontWeight: 'bold', textTransform: 'none', boxShadow: 3 }}
-                >
-                  {isEditing ? "Save Changes" : "Confirm Salary"}
-                </Button>
-                {isEditing && (
-                   <Button 
-                    variant="outlined"
-                    color="inherit" 
-                    sx={{ ml: 2, py: 2, px: 4, borderRadius: '12px', textTransform: 'none' }} 
-                    onClick={() => { setIsEditing(false); setFormData({ teacherId: "", teacherName: "", month: "", year: new Date().getFullYear().toString(), amount: "", whatsappNumber: "", date: new Date().toISOString().split('T')[0] }); }}
-                   >
-                   Cancel Edit
-                 </Button>
-                )}
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                  <Button 
+                      variant="contained" 
+                      size="large" 
+                      onClick={handleSave} 
+                      sx={{ py: 2, px: { xs: 4, sm: 10 }, borderRadius: '12px', fontWeight: 'bold', textTransform: 'none', boxShadow: 3, width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    {isEditing ? "Save Changes" : "Confirm Salary"}
+                  </Button>
+                  {isEditing && (
+                     <Button 
+                      variant="outlined"
+                      color="inherit" 
+                      sx={{ py: 2, px: 4, borderRadius: '12px', textTransform: 'none', width: { xs: '100%', sm: 'auto' } }} 
+                      onClick={() => { setIsEditing(false); setFormData({ teacherId: "", teacherName: "", month: "", year: new Date().getFullYear().toString(), amount: "", whatsappNumber: "", date: new Date().toISOString().split('T')[0] }); }}
+                     >
+                     Cancel Edit
+                   </Button>
+                  )}
+                </Box>
               </Grid>
             </Grid>
           </Paper>
         </Grid>
 
         <Grid item xs={12} xl={11}>
-          <Typography variant="h5" fontWeight="800" mb={3} sx={{ color: '#1e293b' }}>Payment Logs</Typography>
+          <Typography variant="h5" fontWeight="800" mb={3} sx={{ color: '#1e293b', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Payment Logs</Typography>
           
           {Object.entries(groupedSalaries).reverse().map(([groupKey, records]) => (
             <Accordion key={groupKey} sx={{ mb: 2, borderRadius: '16px !important', '&:before': { display: 'none' } }} variant="outlined">
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
-                  <CalendarMonthIcon color="primary" />
-                  <Typography fontWeight="700" sx={{ flexGrow: 1 }}>{groupKey}</Typography>
-                  <Button 
-                    size="small" 
-                    startIcon={<PictureAsPdfIcon />} 
-                    color="error" 
-                    onClick={(e) => { e.stopPropagation(); downloadMonthlyPDF(groupKey, records); }}
-                    sx={{ mr: 2, textTransform: 'none', fontWeight: 600 }}
-                  >
-                    PDF Report
-                  </Button>
-                  <Chip label={`Total: Rs. ${records.reduce((s, r) => s + Number(r.amount), 0)}`} color="primary" size="small" variant="outlined" sx={{ fontWeight: 'bold' }} />
-                </Stack>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' }, 
+                  alignItems: { xs: 'flex-start', sm: 'center' }, 
+                  gap: 2, 
+                  width: '100%' 
+                }}>
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                    <CalendarMonthIcon color="primary" />
+                    <Typography fontWeight="700">{groupKey}</Typography>
+                  </Stack>
+                  
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' }, 
+                    gap: 1.5, 
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    width: { xs: '100%', sm: 'auto' },
+                    ml: { sm: 'auto' },
+                    mr: { sm: 2 }
+                  }}>
+                    <Button 
+                      size="small" 
+                      startIcon={<PictureAsPdfIcon />} 
+                      color="error" 
+                      onClick={(e) => { e.stopPropagation(); downloadMonthlyPDF(groupKey, records); }}
+                      sx={{ textTransform: 'none', fontWeight: 600, justifyBounding: 'center' }}
+                    >
+                      PDF Report
+                    </Button>
+                    <Chip label={`Total: Rs. ${records.reduce((s, r) => s + Number(r.amount), 0)}`} color="primary" size="small" variant="outlined" sx={{ fontWeight: 'bold', alignSelf: { xs: 'flex-start', sm: 'center' } }} />
+                  </Box>
+                </Box>
               </AccordionSummary>
               <AccordionDetails sx={{ p: 0 }}>
-                <TableContainer>
+                <TableContainer sx={{ overflowX: 'auto' }}>
                   <Table>
                     <TableHead sx={{ bgcolor: '#f1f5f9' }}>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 600 }}>Teacher</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Teacher</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Amount</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Date</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Actions</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {records.map((r) => (
                         <TableRow key={r._id} hover>
-                          <TableCell><PersonIcon fontSize="inherit" sx={{ mr: 1, color: 'primary.main' }} />{r.teacherName}</TableCell>
-                          <TableCell sx={{ fontWeight: 700, color: '#059669' }}>Rs. {r.amount}</TableCell>
-                          <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
-                          <TableCell align="right">
+                          <TableCell sx={{ whiteSpace: 'nowrap' }}><PersonIcon fontSize="inherit" sx={{ mr: 1, color: 'primary.main' }} />{r.teacherName}</TableCell>
+                          <TableCell sx={{ fontWeight: 700, color: '#059669', whiteSpace: 'nowrap' }}>Rs. {r.amount}</TableCell>
+                          <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(r.date).toLocaleDateString()}</TableCell>
+                          <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                             <IconButton onClick={() => { setIsEditing(true); setCurrentRecordId(r._id); setFormData({...r, date: r.date.split('T')[0]}); window.scrollTo({top: 0, behavior: 'smooth'}); }} color="primary"><EditIcon fontSize="small" /></IconButton>
                             <IconButton onClick={() => handleDelete(r._id)} color="error"><DeleteIcon fontSize="small" /></IconButton>
                           </TableCell>

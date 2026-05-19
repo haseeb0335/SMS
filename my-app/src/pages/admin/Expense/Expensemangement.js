@@ -10,15 +10,14 @@ import {
   Add as AddIcon, 
   Edit as EditIcon,
   Cancel as CancelIcon,
-  Download as DownloadIcon // New Icon
+  Download as DownloadIcon 
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable'; // Import autoTable directly
+import autoTable from 'jspdf-autotable'; 
 
  const BASE_URL = "https://sms-xi-rose.vercel.app";
-
 
 const categories = ['Utilities', 'Salaries', 'Maintenance', 'Stationery', 'Events', 'Other'];
 
@@ -74,17 +73,15 @@ const ExpenseManagement = () => {
       tableRows.push(rowData);
     });
 
-    // CHANGE: Use autoTable(doc, { ... }) instead of doc.autoTable
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 30,
       theme: 'grid',
       styles: { fontSize: 9 },
-      headStyles: { fillStyle: '#1e293b' } // Matches your dashboard theme
+      headStyles: { fillStyle: '#1e293b' } 
     });
 
-    // To get the final Y position for the total:
     const finalY = doc.lastAutoTable.finalY; 
     doc.text(`Total Monthly Expense: Rs. ${totalExpense.toLocaleString()}`, 14, finalY + 10);
     
@@ -157,40 +154,47 @@ const ExpenseManagement = () => {
   const totalExpense = expenses.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1e293b' }}>
+    <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' }, 
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        gap: 2, 
+        mb: 4 
+      }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1e293b', fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
           School Expense Management
         </Typography>
-        {/* DOWNLOAD ALL BUTTON */}
         <Button 
           variant="contained" 
           color="success" 
           startIcon={<DownloadIcon />}
           onClick={downloadAllExpensesPDF}
+          sx={{ width: { xs: '100%', sm: 'auto' }, borderRadius: '10px' }}
         >
           Download Report (PDF)
         </Button>
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ bgcolor: '#1e293b', color: 'white', borderRadius: 3 }}>
-            <CardContent>
-              <Typography variant="subtitle2" gutterBottom>TOTAL MONTHLY EXPENSE</Typography>
-              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Rs. {totalExpense.toLocaleString()}</Typography>
+            <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ opacity: 0.8, letterSpacing: '0.5px' }}>TOTAL MONTHLY EXPENSE</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', fontSize: { xs: '1.85rem', sm: '2.125rem' } }}>Rs. {totalExpense.toLocaleString()}</Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Form (Same as before) */}
-      <Paper sx={{ p: 3, mb: 4, borderRadius: 3, border: isEditing ? '2px solid #1976d2' : 'none' }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+      {/* Form */}
+      <Paper sx={{ p: { xs: 2.5, sm: 3 }, mb: 4, borderRadius: 3, border: isEditing ? '2px solid #1976d2' : 'none' }}>
+        <Typography variant="h6" sx={{ mb: 2.5, fontWeight: 700 }}>
           {isEditing ? "Update Expense Record" : "Add New Expense"}
         </Typography>
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2.5} alignItems="center">
             <Grid item xs={12} sm={3}>
               <TextField fullWidth type="date" label="Date" InputLabelProps={{ shrink: true }}
                 value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
@@ -210,12 +214,12 @@ const ExpenseManagement = () => {
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
             </Grid>
             <Grid item xs={12} sm={1}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
                 <Button fullWidth variant="contained" type="submit" sx={{ height: '56px', borderRadius: 2 }}>
                   {isEditing ? <EditIcon /> : <AddIcon />}
                 </Button>
                 {isEditing && (
-                  <Button variant="outlined" color="error" onClick={() => { setIsEditing(false); setFormData({date:'', category:'', description:'', amount:''}); }}>
+                  <Button variant="outlined" color="error" onClick={() => { setIsEditing(false); setFormData({date:'', category:'', description:'', amount:''}); }} sx={{ height: '56px', borderRadius: 2 }}>
                     <CancelIcon />
                   </Button>
                 )}
@@ -225,30 +229,29 @@ const ExpenseManagement = () => {
         </form>
       </Paper>
 
-      <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+      <TableContainer component={Paper} sx={{ borderRadius: 3, overflowX: 'auto' }}>
         <Table>
           <TableHead sx={{ bgcolor: '#f8fafc' }}>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Amount (Rs)</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Date</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Category</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Description</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Amount (Rs)</TableCell>
+              <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {expenses.map((expense) => (
               <TableRow key={expense._id} hover>
-                <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
-                <TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(expense.date).toLocaleDateString()}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Box sx={{ px: 1.5, py: 0.5, bgcolor: '#e2e8f0', borderRadius: 1, display: 'inline-block', fontSize: '0.75rem', fontWeight: 'bold' }}>
                     {expense.category.toUpperCase()}
                   </Box>
                 </TableCell>
-                <TableCell>{expense.description}</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>{expense.amount.toLocaleString()}</TableCell>
-                <TableCell align="right">
-                  {/* INDIVIDUAL DOWNLOAD BUTTON */}
+                <TableCell sx={{ minWidth: '150px' }}>{expense.description}</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>{expense.amount.toLocaleString()}</TableCell>
+                <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                   <IconButton color="success" onClick={() => downloadIndividualExpensePDF(expense)}>
                     <PrintIcon fontSize="small" />
                   </IconButton>
